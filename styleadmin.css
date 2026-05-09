@@ -1,0 +1,254 @@
+/* Importación de fuente Montserrat */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
+
+:root {
+    /* Definición de variables para asegurar consistencia en el proyecto */
+    --color-bg: #e6dddd;
+    --color-surface: #ffffff;
+    --color-text-primary: #333333;
+    --shadow-border: rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+}
+
+body {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    background-color: var(--color-bg);
+}
+
+.sidebar {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    width: 18rem;
+    height: 100%;
+    background-color: var(--color-surface);
+    box-shadow: 1px 0px 10px var(--shadow-border);
+    transition: width 0.5s ease;
+    padding-top: 1.5rem; /* Espacio superior */
+    margin-right: 80px;
+}
+
+/* Brand - El contenedor principal */
+.brand {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    /* La clave: separa los grupos de elementos al máximo */  
+    padding: 0 1rem; 
+    margin-bottom: 2rem;
+    
+}
+
+.brand-detail{
+    display: flex;
+    align-items: center;
+    gap: 0.8rem
+}
+
+/* Estilo para el logo */
+.brand img {
+    width: 50px; /* Tamaño ajustado para no saturar el sidebar */
+    height: auto;
+}
+
+/* Estilo para el texto */
+.brand span {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: nowrap; /* Evita que el texto salte de línea */
+    margin-left: 0.5rem;
+    flex-grow: 1; /* Permite que el texto ocupe el espacio central */
+}
+
+.menu-btn {
+    position: absolute;
+    right: -0.875rem; /* La mitad del ancho del botón para que quede centrado sobre la línea */
+    top: 50%;
+    transform: translateY(-50%); /* Centrado vertical perfecto */
+    
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 50%;
+    background-color: #fff;
+    box-shadow: 2px 2px 5px var(--shadow-border);
+    z-index: 10; /* Asegura que esté por encima del borde del sidebar */
+}
+.menu-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.menu-btn .material-symbols-outlined {
+    font-size: 1.2rem;
+    /* Ajuste visual para centrar la flecha de Google Icons */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Menu Container */
+
+.menu-container{
+    
+    display: flex;
+    padding-top: 0;
+}
+
+/* Search */
+
+.search {
+    display: flex;
+    width: 100%;
+    padding: 0.55rem 0;
+    margin-bottom: 1.2rem;
+    border-radius: 0.3rem;
+    box-shadow: 0 0 0 1px var(--color-border);
+    cursor: pointer;
+    transition: box-shadow 0.5s ease;
+    border: 0.5px solid grey;
+    
+   
+    
+    
+}
+
+.search img {
+    width: 20px;           /* Ajusta el tamaño de tu search.svg */
+    height: 20px;
+    display: block;        /* Evita espacios extra debajo de la imagen */
+    
+    
+}
+
+.search input {
+    border: none;          /* Quita el borde interno del input */
+    outline: none;         /* Quita el borde azul al hacer clic */
+    flex-grow: 1;          /* Hace que el input ocupe el resto del ancho disponible */
+    font-family: 'Montserrat', sans-serif; /* Para que coincida con tu fuente */
+    width: 100%;
+    
+}
+
+.search:hover{
+    box-shadow: 0 0 0 1px var(--color-text-primary);
+}
+
+.iconos{
+    
+    font-size: 1.35rem;
+    color: var(--color-text-secundary);
+    padding: 0 0.8rem;
+}
+
+.search:hover img{
+    color: var(--color-text-primary);
+    
+}
+
+.search input{
+    width: 70%;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    color: var(--color-text-primary);
+}
+
+/* Menu */
+
+.menu{
+    
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.menu .menu-item{
+    
+    position: relative;
+    list-style: none;
+    overflow: hidden;
+}
+
+.menu .menu-link{
+    
+    display: flex;
+    padding: 10px 0;
+    color: var(--color-text-secondary); 
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.menu-item:hover .menu-link,
+.sub-menu .sub-menu-link:hover,
+.menu.item.active .menu-link{
+    color: var(--color-text-primary);
+    background-color: var(--color-bg)
+}
+.menu-link img{
+    
+    font-size: 1.35rem;
+    padding: 0 0.8rem;
+}
+
+.menu-link img:last-child{
+    
+    margin-left: auto;
+}
+
+.menu-link span{
+    
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Sub-menu */
+.sub-menu{
+    position: relative;
+}
+
+.sub-menu .sub-menu-link{
+   
+    display: flex;
+    margin-left: 34px;
+    padding: 0.55rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-radius: 0.3rem;
+}
+
+
+.sub-menu:before {
+    content: '';
+    position: absolute;
+    height: 100%;
+    
+    /* 1. Definimos un ancho de 1px real */
+    width: 2px; 
+    
+    /* 2. Lo hacemos más delgado visualmente (0.5px) */
+    transform: scaleX(0.5); 
+    transform-origin: left;
+    
+    margin-left: 1.4rem;
+    background-color: rgba(183, 176, 176, 0.9);
+    
+    /* 3. Sombra muy sutil que no engrosa la línea */
+    /* offset-x | offset-y | blur | color */
+    box-shadow: 0.5px 0 1px rgba(0, 0, 0, 0.15);
+}

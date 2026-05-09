@@ -1,0 +1,14 @@
+
+# Dependencias de Node.js (se reinstalan con npm install)
+node_modules/
+ 
+# Variables de entorno (contrasenas, claves secretas)
+.env
+ 
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+ 
+# Logs de errores
+*.log
+npm-debug.log*
