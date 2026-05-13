@@ -8,9 +8,9 @@ const path = require('path');
 // Importar conexión y rutas
 const { probarConexion } = require('./db/conexion');
 const usuarioRoutes = require('./routes/usuarioRoutes');
-const productoRoutes = require('./routes/productoRoutes');
+/* const productoRoutes = require('./routes/productoRoutes'); */
 const pedidoRoutes = require('./routes/pedidoRoutes');
-const reparacionRoutes = require('./routes/reparacionRoutes');
+const reparacionRoutes = require('./routes/Reparacionroutes');
 
 const app = express();
 const PUERTO = 3000;
@@ -20,11 +20,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-
 // Rutas de la API
 app.use('/api', usuarioRoutes);
-app.use('/api', productoRoutes);
+/* app.use('/api', productoRoutes); */
 app.use('/api', pedidoRoutes);
 app.use('/api', reparacionRoutes);
 

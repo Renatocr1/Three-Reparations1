@@ -442,24 +442,105 @@ tbody tr:hover {
     color: #7494ec;
 }
 
+/* ---------- Botón Eliminar ---------- */
 .btn-eliminar {
     background: #fee2e2;
-    color: #ef4444;
-    border: none;
-    width: 36px;
-    height: 36px;
+    color: #b91c1c;
+    border: 1px solid transparent;
+    padding: 7px 14px;
     border-radius: 8px;
     cursor: pointer;
-    display: flex;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Montserrat', sans-serif;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    transition: 0.2s;
+    gap: 6px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-eliminar i {
+    font-size: 16px;
+    transition: transform 0.3s ease;
 }
 
 .btn-eliminar:hover {
-    background: #ef4444;
-    color: #fff;
+    background: #dc2626;
+    color: white;
+    border-color: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25);
+}
+
+.btn-eliminar:hover i {
+    transform: rotate(-15deg) scale(1.1);
+}
+
+.btn-eliminar:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
+.btn-eliminar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Spinner cuando está eliminando */
+.btn-eliminar.eliminando {
+    background: #b91c1c;
+    color: white;
+    pointer-events: none;
+}
+
+.btn-eliminar.eliminando i {
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Animación de eliminación de fila ---------- */
+@keyframes fadeOutRow {
+    0% {
+        opacity: 1;
+        transform: translateX(0);
+        background: transparent;
+    }
+    30% {
+        opacity: 1;
+        background: #fee2e2;
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(40px);
+        background: #fee2e2;
+    }
+}
+
+tr.eliminando-fila {
+    animation: fadeOutRow 0.5s ease forwards;
+}
+
+/* Animación de entrada para filas nuevas (cuando recargas) */
+@keyframes fadeInRow {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#tablaClientesBody tr {
+    animation: fadeInRow 0.3s ease;
 }
 
 /* ---------- RESPONSIVE ---------- */
@@ -505,4 +586,84 @@ tbody tr:hover {
     td {
         padding: 12px 15px;
     }
+}
+
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.badge-cliente {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.badge-admin {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.btn-eliminar {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-eliminar:hover {
+    background: #fecaca;
+}
+
+/* Contenedor de botones del header de la tabla */
+.tabla-acciones {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Filtros */
+.filtros {
+    display: flex;
+    gap: 5px;
+    background: #f3f4f6;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.filtro-btn {
+    border: none;
+    background: transparent;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    transition: all 0.2s;
+}
+
+.filtro-btn:hover {
+    color: #111827;
+}
+
+.filtro-btn.active {
+    background: white;
+    color: #4f46e5;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* Badge para administradores */
+.badge-admin {
+    background: #fee2e2;
+    color: #b91c1c;
 }

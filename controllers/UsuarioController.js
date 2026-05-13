@@ -8,31 +8,22 @@ const usuarioController = {
     try {
       const { nombre, email, password } = req.body;
 
-      if (!nombre || !email || !password) {
-        return res.status(400).json({ error: 'Todos los campos son obligatorios' });
-      }
-
-      if (nombre.trim().length < 2) {
-        return res.status(400).json({ error: 'El nombre debe tener al menos 2 caracteres' });
-      }
-
-      const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!regexEmail.test(email)) {
-        return res.status(400).json({ error: 'Correo con formato inválido' });
-      }
-
-      if (password.length < 3) {
-        return res.status(400).json({ error: 'La contraseña debe tener al menos 3 caracteres' });
-      }
-
-      if (await Usuario.emailExiste(email)) {
-        return res.status(400).json({ error: 'Este correo ya está registrado' });
+      // Verificamos si el email ya existe usando el modelo
+      const existe = await Usuario.emailExiste(email);
+      if (existe) {
+        return res.status(400).json({ error: 'El correo ya está registrado' });
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
-      const id = await Usuario.crear({ nombre, email, password: passwordHash });
+      
+      // Se registra con rol 'cliente' por defecto
+      const id = await Usuario.crear({ 
+          nombre, 
+          correo: email, // Usamos 'correo' para coincidir con el modelo
+          password: passwordHash
+      });
 
-      res.json({ mensaje: 'Usuario registrado correctamente', id });
+      res.json({ mensaje: 'Registrado correctamente como cliente', id });
     } catch (error) {
       console.error('Error en registro:', error);
       res.status(500).json({ error: 'Error en el servidor' });
@@ -60,7 +51,7 @@ const usuarioController = {
         return res.status(401).json({ error: 'Email o contraseña incorrectos' });
       }
 
-      // Devolvemos el usuario SIN la contraseña, pero CON el rol
+      // Devolvemos el usuario SIN la contraseña, pero CON el rol para redirección
       const { contrasena, ...usuarioSinPassword } = usuario;
 
       res.json({ mensaje: 'Login exitoso', usuario: usuarioSinPassword });
@@ -70,7 +61,30 @@ const usuarioController = {
     }
   },
 
-  // GET /api/usuarios
+  /**
+   * GET /api/usuarios/estadisticas
+   * Esta función alimenta los cuadros de Clientes, Admins y Total
+   */
+  async obtenerEstadisticas(req, res) {
+    try {
+        const usuarios = await Usuario.listarTodos();
+        
+        const totalUsuarios = usuarios.length;
+        const clientes = usuarios.filter(u => u.rol === 'cliente').length;
+        const administradores = usuarios.filter(u => u.rol === 'admin').length;
+
+        res.json({
+            totalUsuarios,
+            clientes,
+            administradores
+        });
+    } catch (error) {
+        console.error('Error en estadísticas:', error);
+        res.status(500).json({ error: "Error al obtener estadísticas" });
+    }
+  },
+
+  // GET /api/usuarios (Lista completa para la tabla del administrador)
   async listar(req, res) {
     try {
       const usuarios = await Usuario.listarTodos();

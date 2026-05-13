@@ -1,125 +1,199 @@
 // ============================================
-// Script del panel de administración
-// Conecta con la API para mostrar datos reales
+// Panel de Administración - Lógica de Usuarios
+// Archivo: public/scriptadmin.js
 // ============================================
 
-// Al cargar la página, traemos los datos
-document.addEventListener('DOMContentLoaded', () => {
-    cargarUsuarios();
-});
+const API_URL = 'http://localhost:3000/api';
 
-// ============================================
-// Cargar todos los usuarios desde la API
-// ============================================
+// Estado global
+let todosLosUsuarios = [];
+let filtroActual = 'todos'; // 'todos' | 'cliente' | 'admin'
+
+// Referencias al DOM
+const tbody = document.getElementById('tablaClientesBody');
+const statClientes = document.getElementById('statClientes');
+const statAdmins = document.getElementById('statAdmins');
+const statTotal = document.getElementById('statTotal');
+
+/**
+ * Carga todos los usuarios desde la API y actualiza la tabla y estadísticas.
+ */
 async function cargarUsuarios() {
-    try {
-        const respuesta = await fetch('/api/usuarios');
-        const usuarios = await respuesta.json();
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="5" style="text-align:center; padding:30px; color:#999;">
+        <i class='bx bx-loader-alt bx-spin'></i> Cargando usuarios...
+      </td>
+    </tr>`;
 
-        if (!respuesta.ok) {
-            mostrarError('No se pudieron cargar los usuarios');
-            return;
-        }
+  try {
+    const res = await fetch(`${API_URL}/usuarios`);
+    if (!res.ok) throw new Error(`Error ${res.status} al cargar usuarios`);
+    todosLosUsuarios = await res.json();
 
-        // Separar clientes y admins
-        const clientes = usuarios.filter(u => u.rol === 'cliente');
-        const admins = usuarios.filter(u => u.rol === 'admin');
+    actualizarEstadisticas();
+    renderizarTabla();
+  } catch (err) {
+    console.error('Error al cargar usuarios:', err);
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center; padding:30px; color:#dc2626;">
+          <i class='bx bx-error-circle'></i> ${err.message}
+        </td>
+      </tr>`;
+  }
+}
 
-        // Actualizar estadísticas
-        document.getElementById('statClientes').textContent = clientes.length;
-        document.getElementById('statAdmins').textContent = admins.length;
-        document.getElementById('statTotal').textContent = usuarios.length;
+/**
+ * Actualiza las tres tarjetas de estadísticas con los totales reales.
+ * Estos totales NO cambian con el filtro: siempre reflejan el total de la BD.
+ */
+function actualizarEstadisticas() {
+  const clientes = todosLosUsuarios.filter(u => u.rol === 'cliente').length;
+  const admins = todosLosUsuarios.filter(u => u.rol === 'admin').length;
 
-        // Mostrar la lista en la tabla
-        mostrarTablaClientes(clientes);
+  statClientes.textContent = clientes;
+  statAdmins.textContent = admins;
+  statTotal.textContent = todosLosUsuarios.length;
+}
 
-    } catch (error) {
-        console.error('Error al cargar usuarios:', error);
-        mostrarError('Error de conexión con el servidor');
+/**
+ * Aplica el filtro actual y dibuja las filas de la tabla.
+ */
+function renderizarTabla() {
+  const usuariosFiltrados = filtroActual === 'todos'
+    ? todosLosUsuarios
+    : todosLosUsuarios.filter(u => u.rol === filtroActual);
+
+  // Sin resultados
+  if (usuariosFiltrados.length === 0) {
+    const etiqueta = filtroActual === 'todos'
+      ? 'usuarios'
+      : (filtroActual === 'cliente' ? 'clientes' : 'administradores');
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center; padding:30px; color:#999;">
+          <i class='bx bx-info-circle'></i> No hay ${etiqueta} registrados
+        </td>
+      </tr>`;
+    return;
+  }
+
+  // Renderizar filas
+  tbody.innerHTML = usuariosFiltrados.map(u => `
+    <tr data-id="${u.id}">
+      <td>${escaparHTML(u.nombre)}</td>
+      <td>${escaparHTML(u.correo)}</td>
+      <td>
+        <span class="badge badge-${u.rol}">
+          ${u.rol === 'admin' ? 'Administrador' : 'Cliente'}
+        </span>
+      </td>
+      <td>${formatearFecha(u.creado_en)}</td>
+      <td>
+        <button class="btn-eliminar" onclick="eliminarUsuario(event, ${u.id}, '${escaparHTML(u.nombre)}')">
+          <i class='bx bx-trash'></i> Eliminar
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+/**
+ * Cambia el filtro activo y vuelve a renderizar la tabla.
+ */
+function cambiarFiltro(nuevoFiltro) {
+  filtroActual = nuevoFiltro;
+
+  // Actualizar estado visual de los botones
+  document.querySelectorAll('.filtro-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filtro === nuevoFiltro);
+  });
+
+  renderizarTabla();
+}
+
+/**
+ * Elimina un usuario tras confirmación, con animación de fila + spinner en el botón.
+ */
+async function eliminarUsuario(event, id, nombre) {
+  if (!confirm(`¿Eliminar al usuario "${nombre}"?\n\nEsta acción no se puede deshacer.`)) {
+    return;
+  }
+
+  // Referencias al botón y la fila
+  const boton = event.currentTarget;
+  const fila = boton.closest('tr');
+
+  // Estado visual: spinner en el botón
+  boton.classList.add('eliminando');
+  boton.innerHTML = `<i class='bx bx-loader-alt'></i> Eliminando...`;
+
+  try {
+    const res = await fetch(`${API_URL}/usuarios/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `Error ${res.status}`);
     }
+
+    // Animar la fila antes de recargar
+    fila.classList.add('eliminando-fila');
+
+    // Esperar a que termine la animación (0.5s) y recargar
+    setTimeout(() => {
+      cargarUsuarios();
+    }, 500);
+
+  } catch (err) {
+    console.error('Error al eliminar:', err);
+    // Restaurar el botón si falló
+    boton.classList.remove('eliminando');
+    boton.innerHTML = `<i class='bx bx-trash'></i> Eliminar`;
+    alert(`No se pudo eliminar el usuario: ${err.message}`);
+  }
 }
 
 // ============================================
-// Pinta la tabla de clientes en el HTML
+// Utilidades
 // ============================================
-function mostrarTablaClientes(clientes) {
-    const tbody = document.getElementById('tablaClientesBody');
-    tbody.innerHTML = '';
 
-    if (clientes.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" style="text-align:center; padding:30px; color:#999;">
-                    No hay clientes registrados todavía
-                </td>
-            </tr>
-        `;
-        return;
-    }
+/**
+ * Formatea fechas en formato dd-mm-aaaa (es-CL).
+ * Devuelve '—' si la fecha es inválida o nula.
+ */
+function formatearFecha(fecha) {
+  if (!fecha) return '—';
+  const d = new Date(fecha);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
 
-    clientes.forEach(cliente => {
-        const fecha = new Date(cliente.creado_en).toLocaleDateString('es-CL');
-        const inicial = cliente.nombre.charAt(0).toUpperCase();
-
-        const fila = document.createElement('tr');
-        fila.innerHTML = `
-            <td>
-                <div class="cliente-celda">
-                    <div class="cliente-avatar">${inicial}</div>
-                    <span>${cliente.nombre}</span>
-                </div>
-            </td>
-            <td>${cliente.correo}</td>
-            <td><span class="badge badge-cliente">Cliente</span></td>
-            <td>${fecha}</td>
-            <td>
-                <button class="btn-eliminar" onclick="eliminarCliente(${cliente.id}, '${cliente.nombre}')">
-                    <i class='bx bx-trash'></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(fila);
-    });
+/**
+ * Escapa HTML para prevenir inyección desde nombres/correos de la BD.
+ */
+function escaparHTML(texto) {
+  if (texto == null) return '';
+  return String(texto)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // ============================================
-// Eliminar un cliente
+// Inicialización
 // ============================================
-async function eliminarCliente(id, nombre) {
-    const confirmar = confirm(`¿Estás seguro de eliminar a "${nombre}"?`);
-    if (!confirmar) return;
+document.addEventListener('DOMContentLoaded', () => {
+  cargarUsuarios();
 
-    try {
-        const respuesta = await fetch(`/api/usuarios/${id}`, {
-            method: 'DELETE'
-        });
-
-        const data = await respuesta.json();
-
-        if (respuesta.ok) {
-            alert('Cliente eliminado correctamente');
-            cargarUsuarios(); // Recarga la tabla
-        } else {
-            alert(data.error || 'No se pudo eliminar');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error de conexión con el servidor');
-    }
-}
-
-// ============================================
-// Muestra un mensaje de error en la tabla
-// ============================================
-function mostrarError(mensaje) {
-    const tbody = document.getElementById('tablaClientesBody');
-    if (tbody) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" style="text-align:center; padding:30px; color:#ef4444;">
-                    ${mensaje}
-                </td>
-            </tr>
-        `;
-    }
-}
+  // Botones de filtro
+  document.querySelectorAll('.filtro-btn').forEach(btn => {
+    btn.addEventListener('click', () => cambiarFiltro(btn.dataset.filtro));
+  });
+});

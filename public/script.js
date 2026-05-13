@@ -1,20 +1,22 @@
 // ============================================
-// Cambio entre login y registro (animación)
+// 1. Cambio entre login y registro (animación)
 // ============================================
 const container = document.querySelector('.container');
 const registerBtn = document.querySelector('.register-btn');
 const loginBtn = document.querySelector('.login-btn');
 
+// Activa el panel de registro
 registerBtn.addEventListener('click', () => {
     container.classList.add('active');
 });
 
+// Activa el panel de login
 loginBtn.addEventListener('click', () => {
     container.classList.remove('active');
 });
 
 // ============================================
-// REGISTRO de usuario
+// 2. REGISTRO de usuario
 // ============================================
 const formRegistro = document.getElementById('formRegistro');
 const mensajeRegistro = document.getElementById('mensajeRegistro');
@@ -39,7 +41,8 @@ formRegistro.addEventListener('submit', async (e) => {
             mensajeRegistro.style.color = 'green';
             mensajeRegistro.textContent = data.mensaje || 'Registrado correctamente';
             formRegistro.reset();
-            // Después de 1.5 seg cambia al panel de login
+            
+            // Pausa estética antes de volver automáticamente al login
             setTimeout(() => {
                 container.classList.remove('active');
                 mensajeRegistro.textContent = '';
@@ -56,7 +59,7 @@ formRegistro.addEventListener('submit', async (e) => {
 });
 
 // ============================================
-// LOGIN de usuario (CON REDIRECCIÓN POR ROL)
+// 3. LOGIN de usuario (CON REDIRECCIÓN POR ROL)
 // ============================================
 const formLogin = document.getElementById('formLogin');
 const mensajeLogin = document.getElementById('mensajeLogin');
@@ -78,12 +81,12 @@ formLogin.addEventListener('submit', async (e) => {
 
         if (respuesta.ok) {
             mensajeLogin.style.color = 'green';
-            mensajeLogin.textContent = '¡Bienvenido ' + data.usuario.nombre + '!';
+            mensajeLogin.textContent = `¡Bienvenido ${data.usuario.nombre}!`;
 
-            // Guarda el usuario (incluido el rol) en sessionStorage
+            // Guardamos los datos en sessionStorage para usarlos en otras páginas
             sessionStorage.setItem('usuario', JSON.stringify(data.usuario));
 
-            // Redirige según el rol
+            // REDIRECCIÓN SEGÚN EL ROL RECIBIDO DEL BACKEND (admin o cliente)
             setTimeout(() => {
                 if (data.usuario.rol === 'admin') {
                     window.location.href = 'admin.html';
