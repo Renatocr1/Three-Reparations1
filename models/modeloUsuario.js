@@ -11,16 +11,18 @@ const Usuario = {
   },
 
   async crear({ nombre, email, password }) {
+    // Los usuarios nuevos siempre se registran como 'cliente'
+    // El rol 'admin' se asigna manualmente desde la base de datos
     const [resultado] = await pool.query(
-      'INSERT INTO usuarios (nombre, correo, contrasena) VALUES (?, ?, ?)',
-      [nombre, email, password]
+      'INSERT INTO usuarios (nombre, correo, contrasena, rol) VALUES (?, ?, ?, ?)',
+      [nombre, email, password, 'cliente']
     );
     return resultado.insertId;
   },
 
   async buscarPorCorreo(correo) {
     const [filas] = await pool.query(
-      'SELECT id, nombre, correo, contrasena FROM usuarios WHERE correo = ?',
+      'SELECT id, nombre, correo, contrasena, rol FROM usuarios WHERE correo = ?',
       [correo]
     );
     return filas.length > 0 ? filas[0] : null;
@@ -28,14 +30,14 @@ const Usuario = {
 
   async listarTodos() {
     const [filas] = await pool.query(
-      'SELECT id, nombre, correo, creado_en FROM usuarios ORDER BY id DESC'
+      'SELECT id, nombre, correo, rol, creado_en FROM usuarios ORDER BY id DESC'
     );
     return filas;
   },
 
   async buscarPorId(id) {
     const [filas] = await pool.query(
-      'SELECT id, nombre, correo, creado_en FROM usuarios WHERE id = ?',
+      'SELECT id, nombre, correo, rol, creado_en FROM usuarios WHERE id = ?',
       [id]
     );
     return filas.length > 0 ? filas[0] : null;

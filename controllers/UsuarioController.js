@@ -60,6 +60,7 @@ const usuarioController = {
         return res.status(401).json({ error: 'Email o contraseña incorrectos' });
       }
 
+      // Devolvemos el usuario SIN la contraseña, pero CON el rol
       const { contrasena, ...usuarioSinPassword } = usuario;
 
       res.json({ mensaje: 'Login exitoso', usuario: usuarioSinPassword });

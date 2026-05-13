@@ -20,7 +20,7 @@ const formRegistro = document.getElementById('formRegistro');
 const mensajeRegistro = document.getElementById('mensajeRegistro');
 
 formRegistro.addEventListener('submit', async (e) => {
-    e.preventDefault(); // Evita que el formulario recargue la página
+    e.preventDefault();
 
     const nombre = document.getElementById('regNombre').value.trim();
     const email = document.getElementById('regEmail').value.trim();
@@ -56,7 +56,7 @@ formRegistro.addEventListener('submit', async (e) => {
 });
 
 // ============================================
-// LOGIN de usuario
+// LOGIN de usuario (CON REDIRECCIÓN POR ROL)
 // ============================================
 const formLogin = document.getElementById('formLogin');
 const mensajeLogin = document.getElementById('mensajeLogin');
@@ -80,12 +80,16 @@ formLogin.addEventListener('submit', async (e) => {
             mensajeLogin.style.color = 'green';
             mensajeLogin.textContent = '¡Bienvenido ' + data.usuario.nombre + '!';
 
-            // Guarda el usuario en sessionStorage para usarlo en admin.html
+            // Guarda el usuario (incluido el rol) en sessionStorage
             sessionStorage.setItem('usuario', JSON.stringify(data.usuario));
 
-            // Redirige al panel de administración
+            // Redirige según el rol
             setTimeout(() => {
-                window.location.href = 'admin.html';
+                if (data.usuario.rol === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'cliente.html';
+                }
             }, 1000);
         } else {
             mensajeLogin.style.color = 'red';
