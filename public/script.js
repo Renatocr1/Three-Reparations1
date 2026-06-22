@@ -16,7 +16,7 @@ loginBtn.addEventListener('click', () => {
 });
 
 // ============================================
-// 2. REGISTRO de usuario
+// 2. REGISTRO de usuario (MODIFICADO)
 // ============================================
 const formRegistro = document.getElementById('formRegistro');
 const mensajeRegistro = document.getElementById('mensajeRegistro');
@@ -27,6 +27,14 @@ formRegistro.addEventListener('submit', async (e) => {
     const nombre = document.getElementById('regNombre').value.trim();
     const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value;
+
+    // --- NUEVA VALIDACIÓN ---
+    if (password.includes(' ')) {
+        mensajeRegistro.style.color = 'red';
+        mensajeRegistro.textContent = 'La contraseña no puede contener espacios.';
+        return; // Detenemos la ejecución aquí si hay espacios
+    }
+    // ------------------------
 
     try {
         const respuesta = await fetch('/api/registro', {
@@ -41,8 +49,7 @@ formRegistro.addEventListener('submit', async (e) => {
             mensajeRegistro.style.color = 'green';
             mensajeRegistro.textContent = data.mensaje || 'Registrado correctamente';
             formRegistro.reset();
-            
-            // Pausa estética antes de volver automáticamente al login
+
             setTimeout(() => {
                 container.classList.remove('active');
                 mensajeRegistro.textContent = '';
