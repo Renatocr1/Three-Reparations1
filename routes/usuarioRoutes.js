@@ -1,27 +1,19 @@
 // ============================================
 // Rutas de Usuarios
-// Archivo: routes/usuarioRoutes.js
+// Archivo: routes/UsuarioRoutes.js
 // ============================================
 const express = require('express');
 const router = express.Router();
 const usuarioController = require('../controllers/UsuarioController');
 
-// POST /api/registro
+// Registro y login (sin /usuarios delante porque el front llama directo a /api/registro)
 router.post('/registro', usuarioController.registrar);
+router.post('/login',    usuarioController.login);
 
-// POST /api/login
-router.post('/login', usuarioController.login);
-
-// GET /api/usuarios/estadisticas  <-- IMPORTANTE: va ANTES de /usuarios/:id
+// Administración de usuarios
 router.get('/usuarios/estadisticas', usuarioController.obtenerEstadisticas);
-
-// GET /api/usuarios
-router.get('/usuarios', usuarioController.listar);
-
-// GET /api/usuarios/:id
-router.get('/usuarios/:id', usuarioController.obtenerPorId);
-
-// DELETE /api/usuarios/:id
-router.delete('/usuarios/:id', usuarioController.eliminar);
+router.get('/usuarios',              usuarioController.listar);
+router.get('/usuarios/:id',          usuarioController.obtenerPorId);
+router.delete('/usuarios/:id',       usuarioController.eliminar);
 
 module.exports = router;

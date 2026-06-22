@@ -1,67 +1,76 @@
+// ============================================
+// Modelo de Usuarios
+// Archivo: models/modeloUsuario.js
+// ============================================
 const { pool } = require('../db/conexion');
 
 const Usuario = {
 
   /**
-   * Verifica si un correo ya está registrado.
-   * Útil para validar antes de crear un nuevo usuario.
+   * Devuelve true si el correo ya está registrado.
    */
   async emailExiste(correo) {
     const [filas] = await pool.query(
-      'SELECT id FROM usuarios WHERE correo = ?',
+      'SELECT id FROM usuarios WHERE correo = ? LIMIT 1',
       [correo]
     );
     return filas.length > 0;
   },
 
   /**
-   * Crea un nuevo usuario en la base de datos.
-   * Por defecto, el rol siempre será 'cliente'.
+   * Crea un nuevo usuario con rol 'cliente' por defecto.
+   * Recibe la contraseña YA HASHEADA por el controlador.
+   * Devuelve el id generado.
    */
-  async crear({ nombre, correo, password }) {
+  async crear({ nombre, correo, password, rol = 'cliente' }) {
     const [resultado] = await pool.query(
-      'INSERT INTO usuarios (nombre, correo, contrasena, rol) VALUES (?, ?, ?, ?)',
-      [nombre, correo, password, 'cliente']
+      `INSERT INTO usuarios (nombre, correo, contrasena, rol)
+       VALUES (?, ?, ?, ?)`,
+      [nombre, correo, password, rol]
     );
     return resultado.insertId;
   },
 
   /**
-   * Busca un usuario por correo.
-   * Incluye 'contrasena' y 'rol' para poder validar el login.
+   * Busca un usuario por su correo (lo necesita el login).
+   * Devuelve TODOS los campos, incluida la contraseña hasheada,
+   * porque el controlador necesita compararla con bcrypt.
    */
   async buscarPorCorreo(correo) {
     const [filas] = await pool.query(
-      'SELECT id, nombre, correo, contrasena, rol FROM usuarios WHERE correo = ?',
+      'SELECT id, nombre, correo, contrasena, rol, creado_en FROM usuarios WHERE correo = ? LIMIT 1',
       [correo]
     );
-    return filas.length > 0 ? filas[0] : null;
+    return filas[0] || null;
   },
 
   /**
-   * Obtiene todos los usuarios registrados.
-   * Ideal para mostrar en la tabla del panel de administración.
+   * Busca un usuario por su id (sin la contraseña).
+   */
+  async buscarPorId(id) {
+    const [filas] = await pool.query(
+      'SELECT id, nombre, correo, rol, creado_en FROM usuarios WHERE id = ? LIMIT 1',
+      [id]
+    );
+    return filas[0] || null;
+  },
+
+  /**
+   * Lista todos los usuarios (sin la contraseña).
+   * Lo usa el panel de administración.
    */
   async listarTodos() {
     const [filas] = await pool.query(
-      'SELECT id, nombre, correo, rol, creado_en FROM usuarios ORDER BY id DESC'
+      `SELECT id, nombre, correo, rol, creado_en
+       FROM usuarios
+       ORDER BY id DESC`
     );
     return filas;
   },
 
   /**
-   * Busca la información de un usuario específico por su ID.
-   */
-  async buscarPorId(id) {
-    const [filas] = await pool.query(
-      'SELECT id, nombre, correo, rol, creado_en FROM usuarios WHERE id = ?',
-      [id]
-    );
-    return filas.length > 0 ? filas[0] : null;
-  },
-
-  /**
-   * Elimina un usuario de la base de datos por su ID.
+   * Elimina un usuario por id.
+   * Devuelve true si efectivamente borró una fila.
    */
   async eliminar(id) {
     const [resultado] = await pool.query(

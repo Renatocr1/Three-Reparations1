@@ -6,14 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pedidos - Three Reparations</title>
 
-  <!-- Estilos del panel admin (incluye sidebar) -->
   <link rel="stylesheet" href="styleadmin.css">
   <link rel="website icon" type="png" href="Imagenes/Three reparations.png">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+   <link rel="icon" type="png" href="Imagenes/logo_three.png">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  
 
-  <!-- PROTECCIÓN: solo admins pueden entrar aquí -->
+
   <script>
     const usuario = JSON.parse(sessionStorage.getItem('usuario'));
     if (!usuario || usuario.rol !== 'admin') {
@@ -22,484 +22,141 @@
   </script>
 
   <style>
-    /* ---------- Estilos específicos de la página de pedidos ---------- */
-    .page-pedidos {
-      color: #171717;
-      -webkit-font-smoothing: antialiased;
-    }
+    .page-pedidos { color: #171717; -webkit-font-smoothing: antialiased; }
+    .page-pedidos button { font: inherit; cursor: pointer; }
+    .page-pedidos input { font: inherit; }
+    .page-pedidos table { border-collapse: collapse; }
 
-    .page-pedidos button {
-      font: inherit;
-      cursor: pointer;
-    }
+    .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
 
-    .page-pedidos input {
-      font: inherit;
-    }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+    .header h1 { margin: 0 0 4px; font-size: 24px; font-weight: 500; }
+    .header .subtitle { margin: 0; font-size: 14px; color: #737373; }
+    .header .subtitle .up { color: #059669; }
+    .header-actions { display: flex; gap: 8px; }
 
-    .page-pedidos table {
-      border-collapse: collapse;
-    }
+    .btn-pedido { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e5e5e5; background: #fff; color: #404040; border-radius: 6px; padding: 6px 12px; font-size: 14px; transition: background .15s, border-color .15s; }
+    .btn-pedido:hover { background: #f5f5f5; }
+    .btn-pedido.primary { background: #171717; color: #fff; border-color: #171717; }
+    .btn-pedido.primary:hover { background: #404040; }
+    .btn-pedido svg { width: 16px; height: 16px; }
+    .btn-pedido:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* Layout interno */
-    .page {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 32px 24px;
-    }
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    @media (max-width: 640px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+    .kpi { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 14px 16px; }
+    .kpi-label { font-size: 13px; color: #737373; margin: 0; }
+    .kpi-value { font-size: 24px; font-weight: 500; margin: 4px 0 0; }
+    .kpi-value.danger { color: #dc2626; }
 
-    /* Header */
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
+    .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .search { position: relative; flex: 1; min-width: 240px; }
+    .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #a3a3a3; pointer-events: none; }
+    .search input { width: 100%; padding: 8px 12px 8px 34px; border: 1px solid #e5e5e5; border-radius: 6px; background: #fff; font-size: 14px; color: #171717; }
+    .search input::placeholder { color: #a3a3a3; }
+    .search input:focus { outline: none; border-color: #a3a3a3; box-shadow: 0 0 0 3px #e5e5e5; }
 
-    .header h1 {
-      margin: 0 0 4px;
-      font-size: 24px;
-      font-weight: 500;
-    }
+    .table-wrap { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden; }
+    .page-pedidos table { width: 100%; font-size: 14px; }
+    .page-pedidos thead { background: #fafafa; }
+    .page-pedidos thead th { text-align: left; padding: 10px 12px; font-weight: 500; font-size: 13px; color: #737373; }
+    .page-pedidos thead th.right { text-align: right; }
+    .page-pedidos tbody tr { border-top: 1px solid #f5f5f5; transition: background .15s; }
+    .page-pedidos tbody tr:hover { background: #fafafa; }
+    .page-pedidos tbody td { padding: 12px; vertical-align: middle; }
 
-    .header .subtitle {
-      margin: 0;
-      font-size: 14px;
-      color: #737373;
-    }
+    .id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #737373; font-size: 13px; }
+    .total { text-align: right; font-variant-numeric: tabular-nums; }
+    .date { color: #737373; }
+    .email { color: #525252; font-size: 13px; }
 
-    .header .subtitle .up {
-      color: #059669;
-    }
+    .customer { display: flex; align-items: center; gap: 8px; }
+    .avatar { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; }
+    .avatar.c-blue { background: #dbeafe; color: #1d4ed8; }
+    .avatar.c-green { background: #d1fae5; color: #047857; }
+    .avatar.c-violet { background: #ede9fe; color: #6d28d9; }
+    .avatar.c-amber { background: #fef3c7; color: #b45309; }
+    .avatar.c-pink { background: #fce7f3; color: #be185d; }
+    .avatar.c-teal { background: #ccfbf1; color: #0f766e; }
 
-    .header-actions {
-      display: flex;
-      gap: 8px;
-    }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid transparent; }
+    .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .badge.pending  { background: #fef3c7; color: #b45309; border-color: #fde68a; }
+    .badge.in_progress { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+    .badge.completed { background: #d1fae5; color: #047857; border-color: #a7f3d0; }
+    .badge.issue    { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
 
-    /* Botones */
-    .btn-pedido {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border: 1px solid #e5e5e5;
-      background: #fff;
-      color: #404040;
-      border-radius: 6px;
-      padding: 6px 12px;
-      font-size: 14px;
-      transition: background .15s, border-color .15s;
-    }
+    .icon-btn { border: none; background: transparent; color: #a3a3a3; padding: 4px; border-radius: 4px; line-height: 0; }
+    .icon-btn:hover { background: #f5f5f5; color: #525252; }
+    .icon-btn svg { width: 16px; height: 16px; }
 
-    .btn-pedido:hover {
-      background: #f5f5f5;
-    }
+    .empty { padding: 40px 16px; text-align: center; color: #737373; font-size: 14px; }
 
-    .btn-pedido.primary {
-      background: #171717;
-      color: #fff;
-      border-color: #171717;
-    }
+    .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; color: #737373; }
+    .pages { display: flex; gap: 4px; }
+    .page-btn { border: 1px solid #e5e5e5; background: #fff; color: #404040; border-radius: 6px; padding: 4px 10px; font-size: 13px; }
+    .page-btn:hover { background: #f5f5f5; }
+    .page-btn.active { background: #171717; color: #fff; border-color: #171717; }
+    .page-btn svg { width: 14px; height: 14px; vertical-align: middle; }
 
-    .btn-pedido.primary:hover {
-      background: #404040;
-    }
-
-    .btn-pedido svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    /* KPIs */
-    .kpis {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    @media (max-width: 640px) {
-      .kpis {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    .kpi {
-      background: #fff;
-      border: 1px solid #e5e5e5;
-      border-radius: 8px;
-      padding: 14px 16px;
-    }
-
-    .kpi-label {
-      font-size: 13px;
-      color: #737373;
-      margin: 0;
-    }
-
-    .kpi-value {
-      font-size: 24px;
-      font-weight: 500;
-      margin: 4px 0 0;
-    }
-
-    .kpi-value.danger {
-      color: #dc2626;
-    }
-
-    /* Toolbar */
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-
-    .search {
-      position: relative;
-      flex: 1;
-      min-width: 240px;
-    }
-
-    .search svg {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 16px;
-      height: 16px;
-      color: #a3a3a3;
-      pointer-events: none;
-    }
-
-    .search input {
-      width: 100%;
-      padding: 8px 12px 8px 34px;
-      border: 1px solid #e5e5e5;
-      border-radius: 6px;
-      background: #fff;
-      font-size: 14px;
-      color: #171717;
-    }
-
-    .search input::placeholder {
-      color: #a3a3a3;
-    }
-
-    .search input:focus {
-      outline: none;
-      border-color: #a3a3a3;
-      box-shadow: 0 0 0 3px #e5e5e5;
-    }
-
-    /* Tabla */
-    .table-wrap {
-      background: #fff;
-      border: 1px solid #e5e5e5;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .page-pedidos table {
-      width: 100%;
-      font-size: 14px;
-    }
-
-    .page-pedidos thead {
-      background: #fafafa;
-    }
-
-    .page-pedidos thead th {
-      text-align: left;
-      padding: 10px 12px;
-      font-weight: 500;
-      font-size: 13px;
-      color: #737373;
-    }
-
-    .page-pedidos thead th.right {
-      text-align: right;
-    }
-
-    .page-pedidos tbody tr {
-      border-top: 1px solid #f5f5f5;
-      transition: background .15s;
-    }
-
-    .page-pedidos tbody tr:hover {
-      background: #fafafa;
-    }
-
-    .page-pedidos tbody td {
-      padding: 12px;
-      vertical-align: middle;
-    }
-
-    .id {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      color: #737373;
-      font-size: 13px;
-    }
-
-    .total {
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .date {
-      color: #737373;
-    }
-
-    .email {
-      color: #525252;
-      font-size: 13px;
-    }
-
-    /* Cliente */
-    .customer {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .avatar {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 500;
-    }
-
-    .avatar.c-blue {
-      background: #dbeafe;
-      color: #1d4ed8;
-    }
-
-    .avatar.c-green {
-      background: #d1fae5;
-      color: #047857;
-    }
-
-    .avatar.c-violet {
-      background: #ede9fe;
-      color: #6d28d9;
-    }
-
-    .avatar.c-amber {
-      background: #fef3c7;
-      color: #b45309;
-    }
-
-    .avatar.c-pink {
-      background: #fce7f3;
-      color: #be185d;
-    }
-
-    .avatar.c-teal {
-      background: #ccfbf1;
-      color: #0f766e;
-    }
-
-    /* Estados */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      border: 1px solid transparent;
-    }
-
-    .badge .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: currentColor;
-    }
-
-    .badge.pending {
-      background: #fef3c7;
-      color: #b45309;
-      border-color: #fde68a;
-    }
-
-    .badge.in_progress {
-      background: #dbeafe;
-      color: #1d4ed8;
-      border-color: #bfdbfe;
-    }
-
-    .badge.completed {
-      background: #d1fae5;
-      color: #047857;
-      border-color: #a7f3d0;
-    }
-
-    .badge.issue {
-      background: #fee2e2;
-      color: #b91c1c;
-      border-color: #fecaca;
-    }
-
-    /* Menú fila */
-    .icon-btn {
-      border: none;
-      background: transparent;
-      color: #a3a3a3;
-      padding: 4px;
-      border-radius: 4px;
-      line-height: 0;
-    }
-
-    .icon-btn:hover {
-      background: #f5f5f5;
-      color: #525252;
-    }
-
-    .icon-btn svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    /* Vacío */
-    .empty {
-      padding: 40px 16px;
-      text-align: center;
-      color: #737373;
-      font-size: 14px;
-    }
-
-    /* Paginación */
-    .pagination {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 12px;
-      font-size: 13px;
-      color: #737373;
-    }
-
-    .pages {
-      display: flex;
-      gap: 4px;
-    }
-
-    .page-btn {
-      border: 1px solid #e5e5e5;
-      background: #fff;
-      color: #404040;
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 13px;
-    }
-
-    .page-btn:hover {
-      background: #f5f5f5;
-    }
-
-    .page-btn.active {
-      background: #171717;
-      color: #fff;
-      border-color: #171717;
-    }
-
-    .page-btn svg {
-      width: 14px;
-      height: 14px;
-      vertical-align: middle;
-    }
-
-    /* ---------- Modal ---------- */
+    /* Modal nuevo pedido */
     .modal-overlay-pedido[hidden] { display: none; }
-    .modal-overlay-pedido {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.45);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 9999;
-    }
-    .modal-card {
-      background: #fff;
-      border-radius: 12px;
-      width: min(440px, 92vw);
-      padding: 20px 22px;
-      box-shadow: 0 20px 50px rgba(0,0,0,.25);
-    }
-    .modal-head {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 14px;
-    }
+    .modal-overlay-pedido { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    .modal-card { background: #fff; border-radius: 12px; width: min(440px, 92vw); padding: 20px 22px; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
     .modal-head h2 { margin: 0; font-size: 18px; font-weight: 500; }
-    .modal-close {
-      background: none; border: 0; font-size: 24px;
-      color: #737373; cursor: pointer; line-height: 1;
-    }
+    .modal-close { background: none; border: 0; font-size: 24px; color: #737373; cursor: pointer; line-height: 1; }
     .modal-close:hover { color: #171717; }
-
     .form-row { display: flex; flex-direction: column; margin-bottom: 14px; }
     .form-row label { font-size: 13px; color: #525252; margin-bottom: 6px; }
-    .form-row input,
-    .form-row select {
-      padding: 8px 10px;
-      border: 1px solid #e5e5e5;
-      border-radius: 6px;
-      font-size: 14px;
-      color: #171717;
-      background: #fff;
-      font-family: inherit;
-    }
-    .form-row input:focus,
-    .form-row select:focus {
-      outline: none;
-      border-color: #a3a3a3;
-      box-shadow: 0 0 0 3px #e5e5e5;
-    }
+    .form-row input, .form-row select { padding: 8px 10px; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 14px; color: #171717; background: #fff; font-family: inherit; }
+    .form-row input:focus, .form-row select:focus { outline: none; border-color: #a3a3a3; box-shadow: 0 0 0 3px #e5e5e5; }
+    .modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 
-    .modal-foot {
-      display: flex; justify-content: flex-end; gap: 8px;
-      margin-top: 8px;
-    }
+    /* Modal editar */
+    .modal-edit-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+    .modal-edit-overlay.activo { display: flex; }
+    .modal-edit-window { background: #fff; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
+    .modal-edit-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: linear-gradient(135deg, #7494ec, #5a7bd4); color: #fff; border-radius: 12px 12px 0 0; }
+    .modal-edit-head h3 { margin: 0; font-size: 16px; font-weight: 600; }
+    .modal-edit-close { background: transparent; border: none; color: #fff; font-size: 22px; cursor: pointer; width: 28px; height: 28px; border-radius: 6px; }
+    .modal-edit-close:hover { background: rgba(255,255,255,0.2); }
+    .modal-edit-body { padding: 20px; }
+    .modal-edit-body label { display: block; font-size: 13px; font-weight: 600; color: #444; margin: 10px 0 6px; }
+    .modal-edit-body select, .modal-edit-body input { width: 100%; padding: 9px 12px; border: 1.5px solid #e0e0e0; border-radius: 6px; font-size: 14px; box-sizing: border-box; outline: none; font-family: inherit; }
+    .modal-edit-body select:focus, .modal-edit-body input:focus { border-color: #7494ec; }
+    .modal-edit-foot { display: flex; gap: 8px; justify-content: flex-end; padding: 0 20px 20px; }
+    .edit-msg { font-size: 13px; min-height: 18px; margin: 12px 0 0; padding: 8px 12px; border-radius: 6px; display: none; }
+    .edit-msg.ok    { display: block; color: #0f9d58; background: #f0fdf4; font-weight: 600; }
+    .edit-msg.error { display: block; color: #dc2626; background: #fef2f2; font-weight: 600; }
+
+    /* Total editable */
+    td.total { cursor: pointer; }
+    td.total:hover { background: #f5f7ff; }
   </style>
 </head>
 
 <body>
 
-  <!-- ============ SIDEBAR (copiada de admin.html) ============ -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <img src="Imagenes/logo_three.png" alt="Logo">
       <span>Three Reparations</span>
     </div>
-
     <div class="sidebar-search">
       <div class="sidebar-search-box">
         <i class='bx bx-search'></i>
         <input type="search" placeholder="Buscar...">
       </div>
     </div>
-
     <ul class="sidebar-menu">
       <li class="sidebar-menu-title">Principal</li>
-
       <li class="menu-item">
-        <a href="admin.html" class="menu-link">
-          <i class='bx bx-home-alt'></i>
-          <span>Inicio</span>
-        </a>
+        <a href="admin.html" class="menu-link"><i class='bx bx-home-alt'></i><span>Inicio</span></a>
       </li>
-
       <li class="menu-item open">
         <a href="#" class="menu-link" onclick="toggleSubmenu(event, this)">
-          <i class='bx bx-store'></i>
-          <span>Tienda</span>
-          <i class='bx bx-chevron-down flecha'></i>
+          <i class='bx bx-store'></i><span>Tienda</span><i class='bx bx-chevron-down flecha'></i>
         </a>
         <ul class="sub-menu open">
           <li><a href="#">Productos</a></li>
@@ -507,38 +164,20 @@
           <li><a href="#">Suscripciones</a></li>
         </ul>
       </li>
-
       <li class="menu-item">
-        <a href="#" class="menu-link">
-          <i class='bx bx-group'></i>
-          <span>Clientes</span>
-        </a>
+        <a href="#" class="menu-link"><i class='bx bx-group'></i><span>Clientes</span></a>
       </li>
-
       <li class="menu-item">
-        <a href="#" class="menu-link">
-          <i class='bx bx-wrench'></i>
-          <span>Reparaciones</span>
-        </a>
+        <a href="#" class="menu-link"><i class='bx bx-wrench'></i><span>Reparaciones</span></a>
       </li>
-
       <li class="sidebar-menu-title">Sistema</li>
-
       <li class="menu-item">
-        <a href="#" class="menu-link">
-          <i class='bx bx-bar-chart-alt-2'></i>
-          <span>Reportes</span>
-        </a>
+        <a href="#" class="menu-link"><i class='bx bx-bar-chart-alt-2'></i><span>Reportes</span></a>
       </li>
-
       <li class="menu-item">
-        <a href="#" class="menu-link">
-          <i class='bx bx-cog'></i>
-          <span>Configuración</span>
-        </a>
+        <a href="#" class="menu-link"><i class='bx bx-cog'></i><span>Configuración</span></a>
       </li>
     </ul>
-
     <div class="sidebar-footer">
       <div class="sidebar-user">
         <div class="sidebar-avatar" id="avatar"></div>
@@ -548,20 +187,15 @@
         </div>
       </div>
       <button class="btn-logout" onclick="cerrarSesion()">
-        <i class='bx bx-log-out'></i>
-        Cerrar sesión
+        <i class='bx bx-log-out'></i> Cerrar sesión
       </button>
     </div>
   </aside>
 
-  <!-- ============ MAIN (contenido de Pedidos) ============ -->
   <main class="main page-pedidos">
-
     <div class="topbar">
-      <div style="display: flex; align-items: center; gap: 15px;">
-        <button class="menu-toggle" onclick="toggleSidebar()">
-          <i class='bx bx-menu'></i>
-        </button>
+      <div style="display:flex;align-items:center;gap:15px;">
+        <button class="menu-toggle" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
         <div class="topbar-title">
           <h1>Pedidos</h1>
           <p>Gestiona y revisa los pedidos del sistema</p>
@@ -570,107 +204,71 @@
     </div>
 
     <div class="page">
-
-      <!-- Header -->
       <div class="header">
         <div>
           <h1>Pedidos</h1>
-          <p class="subtitle">
-            1.248 pedidos este mes · <span class="up">+12% vs mes anterior</span>
-          </p>
+          <p class="subtitle">1.248 pedidos este mes · <span class="up">+12% vs mes anterior</span></p>
         </div>
         <div class="header-actions">
           <button id="btn-nuevo-pedido" class="btn-pedido primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Nuevo pedido
           </button>
         </div>
       </div>
 
-      <!-- KPIs -->
       <div class="kpis">
-        <div class="kpi">
-          <p class="kpi-label">Pendientes</p>
-          <p class="kpi-value" id="kpi-pending">0</p>
-        </div>
-        <div class="kpi">
-          <p class="kpi-label">En proceso</p>
-          <p class="kpi-value" id="kpi-progress">0</p>
-        </div>
-        <div class="kpi">
-          <p class="kpi-label">Completados hoy</p>
-          <p class="kpi-value" id="kpi-completed">0</p>
-        </div>
-        <div class="kpi">
-          <p class="kpi-label">Con incidencias</p>
-          <p class="kpi-value danger" id="kpi-issues">0</p>
-        </div>
+        <div class="kpi"><p class="kpi-label">Pendientes</p><p class="kpi-value" id="kpi-pending">0</p></div>
+        <div class="kpi"><p class="kpi-label">En proceso</p><p class="kpi-value" id="kpi-progress">0</p></div>
+        <div class="kpi"><p class="kpi-label">Completados hoy</p><p class="kpi-value" id="kpi-completed">0</p></div>
+        <div class="kpi"><p class="kpi-label">Con incidencias</p><p class="kpi-value danger" id="kpi-issues">0</p></div>
       </div>
 
-      <!-- Toolbar -->
       <div class="toolbar">
         <div class="search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input id="search-input" type="text" placeholder="Buscar por ID, cliente o producto" />
         </div>
       </div>
 
-      <!-- Tabla -->
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th style="width: 90px;">ID</th>
+              <th style="width:90px;">ID</th>
               <th>Cliente</th>
               <th>Correo</th>
-              <th>Servicio</th>
-              <th style="width: 130px;">Estado</th>
-              <th class="right" style="width: 110px;">Total</th>
-              <th style="width: 110px;">Fecha</th>
-              <th style="width: 40px;"></th>
+              <th>Dispositivo</th>
+              <th>Causa de reparación</th>
+              <th style="width:130px;">Estado</th>
+              <th class="right" style="width:120px;">Total</th>
+              <th style="width:110px;">Fecha</th>
+              <th style="width:40px;"></th>
             </tr>
           </thead>
-          <tbody id="orders-tbody">
-            <!-- Filas se inyectan con JS -->
-          </tbody>
+          <tbody id="orders-tbody"></tbody>
         </table>
       </div>
 
-      <!-- Paginación -->
       <div class="pagination">
         <span id="page-info">Mostrando 0 de 0</span>
         <div class="pages">
-          <button class="page-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg></button>
+          <button class="page-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
           <button class="page-btn active">1</button>
           <button class="page-btn">2</button>
           <button class="page-btn">3</button>
-          <button class="page-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6" />
-            </svg></button>
+          <button class="page-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
         </div>
       </div>
     </div>
 
-    <!-- ============ MODAL NUEVO PEDIDO ============ -->
+    <!-- Modal nuevo pedido -->
     <div id="modal-pedido" class="modal-overlay-pedido" hidden>
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <header class="modal-head">
           <h2 id="modal-title">Nuevo pedido</h2>
           <button type="button" class="modal-close" data-close aria-label="Cerrar">&times;</button>
         </header>
-
         <form id="form-pedido" novalidate>
           <div class="form-row">
             <label for="f-cliente">Cliente</label>
@@ -678,17 +276,14 @@
               <option value="">Selecciona un cliente</option>
             </select>
           </div>
-
-          
-
           <div class="form-row">
             <label for="Dispositivo">Dispositivo</label>
             <select id="Dispositivo" name="dispositivo_id" required>
               <option value="">Selecciona un producto</option>
-              
+              <option value="">Celular</option>
+              <option value="">Notebook</option>
             </select>
           </div>
-
           <div class="form-row">
             <label for="f-servicio">Tipo de servicio</label>
             <select id="f-servicio" name="servicio" required>
@@ -701,27 +296,22 @@
               <option value="Otro">Otro</option>
             </select>
           </div>
-
           <div class="form-row">
             <label for="f-estado">Estado</label>
             <select id="f-estado" name="estado" required>
               <option value="pendiente">Pendiente</option>
-              <option value="enviado">Enviado</option>
               <option value="entregado">Entregado</option>
               <option value="cancelado">Cancelado</option>
             </select>
           </div>
-
           <div class="form-row">
             <label for="f-cantidad">Cantidad</label>
             <input id="f-cantidad" name="cantidad" type="number" min="1" step="1" value="1" required />
           </div>
-
           <div class="form-row">
             <label for="f-total">Total (CLP)</label>
             <input id="f-total" name="total" type="number" min="0" step="1" placeholder="0" required />
           </div>
-
           <footer class="modal-foot">
             <button type="button" class="btn-pedido" data-close>Cancelar</button>
             <button type="submit" class="btn-pedido primary">Guardar</button>
@@ -730,114 +320,87 @@
       </div>
     </div>
 
+    <!-- Modal editar (estado + total) -->
+    <div class="modal-edit-overlay" id="modal-editar">
+      <div class="modal-edit-window">
+        <div class="modal-edit-head">
+          <h3>Editar reparación <span id="edit-id"></span></h3>
+          <button type="button" class="modal-edit-close" onclick="cerrarModalEditar()">×</button>
+        </div>
+        <form id="form-editar">
+          <div class="modal-edit-body">
+            <label for="edit-estado">Estado</label>
+            <select id="edit-estado" required>
+              <option value="pendiente">Pendiente</option>
+              <option value="en_proceso">En proceso</option>
+              <option value="listo">Listo</option>
+              <option value="entregado">Entregado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+
+            <label for="edit-total">Total (CLP)</label>
+            <input type="number" id="edit-total" min="0" step="1" placeholder="Ej: 25000">
+
+            <p class="edit-msg" id="edit-msg"></p>
+          </div>
+          <div class="modal-edit-foot">
+            <button type="button" class="btn-pedido" onclick="cerrarModalEditar()">Cancelar</button>
+            <button type="submit" id="btn-guardar-editar" class="btn-pedido primary">Guardar cambios</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
   </main>
 
   <script>
-    // ---------- Setup sidebar ----------
+    // --- Sidebar ---
     const nombreAdmin = usuario.nombre;
-    const inicial = nombreAdmin.charAt(0).toUpperCase();
-    document.getElementById('avatar').textContent = inicial;
+    document.getElementById('avatar').textContent = nombreAdmin.charAt(0).toUpperCase();
     document.getElementById('nombreSidebar').textContent = nombreAdmin;
 
     function toggleSubmenu(event, link) {
       event.preventDefault();
       const item = link.parentElement;
-      const submenu = item.querySelector('.sub-menu');
-      submenu.classList.toggle('open');
+      item.querySelector('.sub-menu').classList.toggle('open');
       item.classList.toggle('open');
     }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+    function cerrarSesion() { sessionStorage.removeItem('usuario'); window.location.href = 'index.html'; }
 
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('open');
-    }
+    // --- Estado global ---
+    let ORDERS = [];
+    let USUARIOS = [];
+    let PRODUCTOS = [];
 
-    function cerrarSesion() {
-      sessionStorage.removeItem('usuario');
-      window.location.href = 'index.html';
-    }
-
-    // ---------- Datos cargados desde el backend ----------
-    let ORDERS = [];        // se llena con fetch GET /api/pedidos
-    let USUARIOS = [];      // para el select de cliente
-    let PRODUCTOS = [];     // para el select de producto
-
-    // Mapea el ENUM de la BD (pendiente/enviado/entregado/cancelado) a los badges
     const STATUS = {
       pendiente:  { label: 'Pendiente',  cls: 'pending' },
-      enviado:    { label: 'Enviado',    cls: 'in_progress' },
+      en_proceso: { label: 'En proceso', cls: 'in_progress' },
+      listo:      { label: 'Listo',      cls: 'completed' },
       entregado:  { label: 'Entregado',  cls: 'completed' },
       cancelado:  { label: 'Cancelado',  cls: 'issue' },
     };
 
     const AVATAR_CLASSES = ['c-blue', 'c-green', 'c-violet', 'c-amber', 'c-pink', 'c-teal'];
-
     function avatarClass(name) {
       const hash = [...name].reduce((acc, c) => acc + c.charCodeAt(0), 0);
       return AVATAR_CLASSES[hash % AVATAR_CLASSES.length];
     }
+    function initials(name) { return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase(); }
 
-    function initials(name) {
-      return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase();
+    const currency = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
+
+    function formatearTotal(total) {
+      if (total === null || total === undefined || total === '') {
+        return '<span style="color:#7494ec;font-style:italic;text-decoration:underline dotted;cursor:pointer;">Agregar precio</span>';
+      }
+      return '<strong>' + currency.format(total) + '</strong>';
     }
-
-    const currency = new Intl.NumberFormat('es-CL', {
-      style: 'currency', currency: 'CLP', maximumFractionDigits: 0,
-    });
 
     function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, c => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      }[c]));
+      return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
 
-    function renderRows(orders) {
-      const tbody = document.getElementById('orders-tbody');
-
-      if (orders.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="empty">No se encontraron pedidos.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = orders.map(o => {
-        const s = STATUS[o.estado] || { label: o.estado, cls: '' };
-        const name = escapeHtml(o.cliente_nombre || '—');
-        const email = escapeHtml(o.cliente_correo || '—');
-        const service = escapeHtml(o.servicio || '—');
-        return `
-        <tr>
-          <td class="id">#${o.id}</td>
-          <td>
-            <div class="customer">
-              <span class="avatar ${avatarClass(name)}">${initials(name)}</span>
-              <span>${name}</span>
-            </div>
-          </td>
-          <td class="email">${email}</td>
-          <td>${service}</td>
-          <td>
-            <span class="badge ${s.cls}"><span class="dot"></span>${s.label}</span>
-          </td>
-          <td class="total">${currency.format(o.total)}</td>
-          <td class="date">${formatearFechaBD(o.creado_en)}</td>
-          <td style="text-align:center;">
-            <button class="icon-btn" aria-label="Más opciones">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-            </button>
-          </td>
-        </tr>
-      `;
-      }).join('');
-    }
-
-    function renderKpis(orders) {
-      const count = (estado) => orders.filter(o => o.estado === estado).length;
-      document.getElementById('kpi-pending').textContent = count('pendiente');
-      document.getElementById('kpi-progress').textContent = count('enviado');
-      document.getElementById('kpi-completed').textContent = count('entregado');
-      document.getElementById('kpi-issues').textContent = count('cancelado');
-    }
-
-    // Convierte un timestamp de la BD ("2026-05-14 14:32:11") en "Hoy 14:32" / "13/05/2026"
     function formatearFechaBD(ts) {
       if (!ts) return '';
       const fecha = new Date(ts);
@@ -845,20 +408,54 @@
       const ayer = new Date(); ayer.setDate(hoy.getDate() - 1);
       const hh = String(fecha.getHours()).padStart(2, '0');
       const mm = String(fecha.getMinutes()).padStart(2, '0');
-      const mismaFecha = (a, b) =>
-        a.getFullYear() === b.getFullYear() &&
-        a.getMonth() === b.getMonth() &&
-        a.getDate() === b.getDate();
-      if (mismaFecha(fecha, hoy)) return `Hoy ${hh}:${mm}`;
-      if (mismaFecha(fecha, ayer)) return `Ayer ${hh}:${mm}`;
-      const d = String(fecha.getDate()).padStart(2, '0');
-      const m = String(fecha.getMonth() + 1).padStart(2, '0');
-      return `${d}/${m}/${fecha.getFullYear()}`;
+      const misma = (a, b) => a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+      if (misma(fecha, hoy)) return `Hoy ${hh}:${mm}`;
+      if (misma(fecha, ayer)) return `Ayer ${hh}:${mm}`;
+      return `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')}/${fecha.getFullYear()}`;
+    }
+
+    function renderRows(orders) {
+      const tbody = document.getElementById('orders-tbody');
+      if (orders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="empty">No se encontraron pedidos.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = orders.map(o => {
+        const s = STATUS[o.estado] || { label: o.estado, cls: '' };
+        const name = escapeHtml(o.cliente_nombre || '—');
+        const email = escapeHtml(o.cliente_correo || '—');
+        const dispositivo = escapeHtml(o.servicio || '—');
+        const causa = escapeHtml(o.descripcion || '—');
+        const totalVal = (o.total !== null && o.total !== undefined) ? o.total : null;
+        return `
+        <tr>
+          <td class="id">#${o.id}</td>
+          <td><div class="customer"><span class="avatar ${avatarClass(name)}">${initials(name)}</span><span>${name}</span></div></td>
+          <td class="email">${email}</td>
+          <td>${dispositivo}</td>
+          <td style="color:#525252;font-size:13px;">${causa}</td>
+          <td><span class="badge ${s.cls}"><span class="dot"></span>${s.label}</span></td>
+          <td class="total" onclick="abrirModalEditar('${o.id}', '${o.estado}', ${totalVal !== null ? totalVal : 'null'})" title="Clic para editar">${formatearTotal(totalVal)}</td>
+          <td class="date">${formatearFechaBD(o.creado_en)}</td>
+          <td style="text-align:center;">
+            <button class="icon-btn" aria-label="Editar" onclick="abrirModalEditar('${o.id}', '${o.estado}', ${totalVal !== null ? totalVal : 'null'})">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderKpis(orders) {
+      const count = (...es) => orders.filter(o => es.includes(o.estado)).length;
+      document.getElementById('kpi-pending').textContent   = count('pendiente');
+      document.getElementById('kpi-progress').textContent  = count('en_proceso');
+      document.getElementById('kpi-completed').textContent = count('listo', 'entregado');
+      document.getElementById('kpi-issues').textContent    = count('cancelado');
     }
 
     function renderPageInfo(orders) {
-      document.getElementById('page-info').textContent =
-        `Mostrando 1–${orders.length} de 1.248`;
+      document.getElementById('page-info').textContent = `Mostrando 1–${orders.length} de ${orders.length}`;
     }
 
     function render(orders) {
@@ -867,101 +464,155 @@
       renderPageInfo(orders);
     }
 
-    const searchInput = document.getElementById('search-input');
-    searchInput.addEventListener('input', (e) => {
+    document.getElementById('search-input').addEventListener('input', e => {
       const q = e.target.value.trim().toLowerCase();
-      const filtered = q
-        ? ORDERS.filter(o =>
-            String(o.id).includes(q) ||
-            (o.cliente_nombre || '').toLowerCase().includes(q) ||
-            (o.cliente_correo || '').toLowerCase().includes(q) ||
-            (o.servicio || '').toLowerCase().includes(q)
-          )
-        : ORDERS;
-      render(filtered);
+      render(q ? ORDERS.filter(o =>
+        String(o.id).includes(q) ||
+        (o.cliente_nombre||'').toLowerCase().includes(q) ||
+        (o.cliente_correo||'').toLowerCase().includes(q) ||
+        (o.servicio||'').toLowerCase().includes(q)
+      ) : ORDERS);
     });
 
-    // ---------- Cargar datos desde el backend ----------
+    // --- Cargar datos ---
     async function cargarPedidos() {
       try {
-        const res = await fetch('/api/pedidos');
-        if (!res.ok) throw new Error('Error al cargar pedidos');
-        ORDERS = await res.json();
+        const t = Date.now();
+        const [resPed, resRep] = await Promise.all([
+          fetch(`/api/pedidos?t=${t}`,      { cache: 'no-store' }),
+          fetch(`/api/reparaciones?t=${t}`, { cache: 'no-store' })
+        ]);
+        const pedidos      = resPed.ok ? await resPed.json() : [];
+        const reparaciones = resRep.ok ? await resRep.json() : [];
+
+        const repsAdaptadas = reparaciones.map(r => ({
+          id:             `R-${r.id}`,
+          cliente_nombre: r.cliente_nombre,
+          cliente_correo: r.cliente_correo,
+          servicio:       r.equipo,
+          descripcion:    r.descripcion || '',
+          estado:         r.estado,
+          total:          (r.total !== null && r.total !== undefined) ? Number(r.total) : null,
+          creado_en:      r.creado_en
+        }));
+
+        ORDERS = [...pedidos, ...repsAdaptadas]
+          .sort((a, b) => new Date(b.creado_en || 0) - new Date(a.creado_en || 0));
         render(ORDERS);
       } catch (err) {
-        console.error(err);
         document.getElementById('orders-tbody').innerHTML =
-          `<tr><td colspan="8" class="empty">No se pudieron cargar los pedidos.</td></tr>`;
+          `<tr><td colspan="9" class="empty" style="color:#dc2626;">Error al cargar: ${err.message}</td></tr>`;
       }
     }
 
     async function cargarUsuariosYProductos() {
       try {
-        // Asume que tienes estos endpoints. Si no, créalos o ajusta las URLs.
-        const [resU, resP] = await Promise.all([
-          fetch('/api/usuarios'),
-          fetch('/api/productos'),
-        ]);
+        const [resU, resP] = await Promise.all([fetch('/api/usuarios'), fetch('/api/productos')]);
         USUARIOS = resU.ok ? await resU.json() : [];
         PRODUCTOS = resP.ok ? await resP.json() : [];
-
         const selCliente = document.getElementById('f-cliente');
-        USUARIOS
-          .filter(u => u.rol === 'cliente' || !u.rol)
-          .forEach(u => {
-            const opt = document.createElement('option');
-            opt.value = u.id;
-            opt.textContent = `${u.nombre} (${u.correo})`;
-            selCliente.appendChild(opt);
-          });
-
-        const selProd = document.getElementById('f-producto');
-        PRODUCTOS.forEach(p => {
+        USUARIOS.filter(u => u.rol === 'cliente' || !u.rol).forEach(u => {
           const opt = document.createElement('option');
-          opt.value = p.id;
-          opt.textContent = `${p.nombre} — $${p.precio}`;
-          opt.dataset.precio = p.precio;
-          selProd.appendChild(opt);
+          opt.value = u.id;
+          opt.textContent = `${u.nombre} (${u.correo})`;
+          selCliente.appendChild(opt);
         });
-      } catch (err) {
-        console.error('No se pudieron cargar usuarios/productos:', err);
-      }
+      } catch (err) { console.error('No se pudieron cargar usuarios/productos:', err); }
     }
 
     cargarPedidos();
     cargarUsuariosYProductos();
 
-    // ---------- Modal Nuevo Pedido ----------
-    const modal = document.getElementById('modal-pedido');
+    // --- Modal editar ---
+    const modalEditar    = document.getElementById('modal-editar');
+    const formEditar     = document.getElementById('form-editar');
+    const editIdSpan     = document.getElementById('edit-id');
+    const editEstadoSel  = document.getElementById('edit-estado');
+    const editTotalInput = document.getElementById('edit-total');
+    const editMsg        = document.getElementById('edit-msg');
+    const btnGuardar     = document.getElementById('btn-guardar-editar');
+    let EDITANDO_ID = null;
+
+    function abrirModalEditar(id, estado, total) {
+      EDITANDO_ID = String(id);
+      editIdSpan.textContent = '#' + EDITANDO_ID;
+      editEstadoSel.value    = estado || 'pendiente';
+      editTotalInput.value   = (total === null || total === undefined || total === 'null') ? '' : total;
+      editMsg.textContent    = '';
+      editMsg.className      = 'edit-msg';
+      modalEditar.classList.add('activo');
+      setTimeout(() => editTotalInput.focus(), 50);
+    }
+
+    function cerrarModalEditar() {
+      modalEditar.classList.remove('activo');
+      EDITANDO_ID = null;
+    }
+
+    modalEditar.addEventListener('click', e => { if (e.target === modalEditar) cerrarModalEditar(); });
+
+    formEditar.addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!EDITANDO_ID) return;
+
+      const estado   = editEstadoSel.value;
+      const totalRaw = editTotalInput.value.trim();
+      const total    = totalRaw === '' ? null : parseFloat(totalRaw);
+
+      const esRep      = EDITANDO_ID.startsWith('R-');
+      const idNum      = esRep ? EDITANDO_ID.replace('R-', '') : EDITANDO_ID;
+      const url        = esRep ? `/api/reparaciones/${idNum}/estado` : `/api/pedidos/${idNum}/estado`;
+
+      btnGuardar.disabled    = true;
+      btnGuardar.textContent = 'Guardando...';
+      editMsg.className      = 'edit-msg';
+
+      try {
+        const res  = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado, total }) });
+        const data = await res.json();
+        if (res.ok) {
+          // Actualizar en memoria inmediatamente (sin esperar al servidor)
+          const idx = ORDERS.findIndex(o => String(o.id) === EDITANDO_ID);
+          if (idx !== -1) {
+            ORDERS[idx].estado = estado;
+            ORDERS[idx].total  = total;
+          }
+          render(ORDERS);
+          editMsg.textContent = '✓ Guardado correctamente';
+          editMsg.className   = 'edit-msg ok';
+          setTimeout(cerrarModalEditar, 900);
+          // Sincronizar con el servidor en segundo plano
+          cargarPedidos();
+        } else {
+          editMsg.textContent = '✗ ' + (data.error || `Error ${res.status}`);
+          editMsg.className   = 'edit-msg error';
+          console.error('Error al guardar:', data, '| URL:', url);
+        }
+      } catch (err) {
+        editMsg.textContent = '✗ No se pudo conectar con el servidor';
+        editMsg.className   = 'edit-msg error';
+        console.error('Error de red:', err);
+      } finally {
+        btnGuardar.disabled    = false;
+        btnGuardar.textContent = 'Guardar cambios';
+      }
+    });
+
+    // --- Modal nuevo pedido ---
+    const modal    = document.getElementById('modal-pedido');
     const btnNuevo = document.getElementById('btn-nuevo-pedido');
-    const form = document.getElementById('form-pedido');
+    const form     = document.getElementById('form-pedido');
 
-    function abrirModal() {
-      form.reset();
-      modal.hidden = false;
-      setTimeout(() => document.getElementById('f-cliente').focus(), 50);
-    }
-
-    function cerrarModal() {
-      modal.hidden = true;
-    }
+    function abrirModal()  { form.reset(); modal.hidden = false; setTimeout(() => document.getElementById('f-cliente').focus(), 50); }
+    function cerrarModal() { modal.hidden = true; }
 
     btnNuevo.addEventListener('click', abrirModal);
+    modal.addEventListener('click', e => { if (e.target === modal || e.target.matches('[data-close]')) cerrarModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) cerrarModal(); });
 
-    // Cerrar al hacer clic en overlay, X o Cancelar
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal || e.target.matches('[data-close]')) cerrarModal();
-    });
-
-    // Cerrar con Escape
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !modal.hidden) cerrarModal();
-    });
-
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
       if (!form.checkValidity()) { form.reportValidity(); return; }
-
       const payload = {
         usuario_id: Number(form.usuario_id.value),
         producto_id: Number(form.producto_id.value),
@@ -970,19 +621,11 @@
         estado: form.estado.value,
         servicio: form.servicio.value,
       };
-
       try {
-        const res = await fetch('/api/pedidos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || 'Error al guardar');
-        }
+        const res = await fetch('/api/pedidos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Error al guardar'); }
         cerrarModal();
-        await cargarPedidos(); // refrescar la tabla con los datos reales
+        await cargarPedidos();
       } catch (err) {
         alert('No se pudo guardar el pedido: ' + err.message);
       }

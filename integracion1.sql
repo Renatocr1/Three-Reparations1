@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-05-2026 a las 02:35:15
+-- Tiempo de generación: 16-05-2026 a las 18:55:42
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -34,8 +34,16 @@ CREATE TABLE `pedidos` (
   `cantidad` int(11) NOT NULL DEFAULT 1,
   `total` decimal(10,2) NOT NULL DEFAULT 0.00,
   `estado` enum('pendiente','enviado','entregado','cancelado') NOT NULL DEFAULT 'pendiente',
-  `creado_en` timestamp NOT NULL DEFAULT current_timestamp()
+  `servicio` varchar(150) DEFAULT NULL,
+  `fecha` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `pedidos`
+--
+
+INSERT INTO `pedidos` (`id`, `usuario_id`, `producto_id`, `cantidad`, `total`, `estado`, `servicio`, `fecha`) VALUES
+(1, 3, 2, 1, 50.00, 'enviado', 'Reparacion Pantalla', '2026-05-15 22:24:10');
 
 -- --------------------------------------------------------
 
@@ -45,22 +53,23 @@ CREATE TABLE `pedidos` (
 
 CREATE TABLE `productos` (
   `id` int(11) NOT NULL,
+  `producto_id` int(11) NOT NULL,
   `nombre` varchar(150) NOT NULL,
   `descripcion` text DEFAULT NULL,
   `precio` decimal(10,2) NOT NULL DEFAULT 0.00,
   `stock` int(11) NOT NULL DEFAULT 0,
   `categoria` varchar(80) DEFAULT NULL,
-  `creado_en` timestamp NOT NULL DEFAULT current_timestamp()
+  `fecha` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `productos`
 --
 
-INSERT INTO `productos` (`id`, `nombre`, `descripcion`, `precio`, `stock`, `categoria`, `creado_en`) VALUES
-(1, 'Cargador iPhone', 'Cargador original tipo C 20W', 15990.00, 25, 'Accesorios', '2026-05-13 15:34:22'),
-(2, 'Pantalla Samsung A50', 'Pantalla LCD de repuesto', 49990.00, 8, 'Repuestos', '2026-05-13 15:34:22'),
-(3, 'Batería universal 5000mAh', 'Power bank portátil', 12990.00, 50, 'Accesorios', '2026-05-13 15:34:22');
+INSERT INTO `productos` (`id`, `producto_id`, `nombre`, `descripcion`, `precio`, `stock`, `categoria`, `fecha`) VALUES
+(1, 0, 'Cargador iPhone', 'Cargador original tipo C 20W', 15990.00, 25, 'Accesorios', '2026-05-15 19:52:56'),
+(2, 0, 'Pantalla Samsung A50', 'Pantalla LCD de repuesto', 49990.00, 8, 'Repuestos', '2026-05-15 19:52:56'),
+(3, 0, 'Batería universal 5000mAh', 'Power bank portátil', 12990.00, 50, 'Accesorios', '2026-05-15 19:52:56');
 
 -- --------------------------------------------------------
 
@@ -70,12 +79,19 @@ INSERT INTO `productos` (`id`, `nombre`, `descripcion`, `precio`, `stock`, `cate
 
 CREATE TABLE `reparaciones` (
   `id` int(11) NOT NULL,
-  `usuario_id` int(11) NOT NULL,
   `equipo` varchar(150) NOT NULL,
   `descripcion` text NOT NULL,
-  `estado` enum('pendiente','en_proceso','listo','entregado','cancelado') NOT NULL DEFAULT 'pendiente',
-  `creado_en` timestamp NOT NULL DEFAULT current_timestamp()
+  `estado` varchar(50) DEFAULT 'Pendiente',
+  `fecha` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `reparaciones`
+--
+
+INSERT INTO `reparaciones` (`id`, `equipo`, `descripcion`, `estado`, `fecha`) VALUES
+(3, 'Galaxy A06', 'entro en contacto con el agua', 'pendiente', '2026-05-16 12:53:07'),
+(7, 'Samsung A50', 'No enciende', 'Pendiente', '2026-05-16 12:40:13');
 
 -- --------------------------------------------------------
 
@@ -85,20 +101,23 @@ CREATE TABLE `reparaciones` (
 
 CREATE TABLE `usuarios` (
   `id` int(11) NOT NULL,
+  `usuario_id` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `correo` varchar(150) NOT NULL,
   `contrasena` varchar(255) NOT NULL,
-  `creado_en` timestamp NOT NULL DEFAULT current_timestamp(),
-  `rol` enum('admin','cliente') NOT NULL DEFAULT 'cliente'
+  `rol` enum('admin','cliente') NOT NULL DEFAULT 'cliente',
+  `fecha` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `usuarios`
 --
 
-INSERT INTO `usuarios` (`id`, `nombre`, `correo`, `contrasena`, `creado_en`, `rol`) VALUES
-(8, 'Martin', 'martin@gmail.com', '$2b$10$hvJ5J2c29/OtkICTFtI5j.9Jf3Ee2ou7PYslysDllAoxYRLyEqGUq', '2026-05-13 14:57:05', 'admin'),
-(9, 'Denny', 'denny@gmail.com', '$2b$10$HOxDUetSncK/qRtF6G5Wt.1b9y1OLDvjwWRlk7vgGeXrxOw8O1Bty', '2026-05-14 00:07:23', 'cliente');
+INSERT INTO `usuarios` (`id`, `usuario_id`, `nombre`, `correo`, `contrasena`, `rol`, `fecha`) VALUES
+(1, 0, 'Administrador', 'admin@three.cl', '$2b$10$hvJ5J2c29/OtkICTFtI5j.9Jf3Ee2ou7PYslysDllAoxYRLyEqGUq', 'admin', '2026-05-15 19:52:56'),
+(2, 0, 'Renato', 'renato@gmail.com', '$2b$10$ZmApB1JG8u8wMKqRdqZGjeO1jVP.Z1gV89/oIA.pV08dFlcD75Ypa', 'admin', '2026-05-15 19:58:37'),
+(3, 0, 'cliente', 'cliente@gmail.com', '$2b$10$K6yUWeAnISHVCfvCXpdOieeCpmI/hRE0s7JGATv2rVkz1KtLMi3zu', 'cliente', '2026-05-15 20:00:20'),
+(4, 0, 'Rodolfo', 'rodolfo@gmail.com', '$2b$10$TwHDYYIiwv60wa3bJUW6Tuy0QW2YMNnlThFMYaec2O6zmtuS3vdZS', 'cliente', '2026-05-15 22:28:41');
 
 --
 -- Índices para tablas volcadas
@@ -122,8 +141,7 @@ ALTER TABLE `productos`
 -- Indices de la tabla `reparaciones`
 --
 ALTER TABLE `reparaciones`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `usuario_id` (`usuario_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `usuarios`
@@ -140,7 +158,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`
@@ -152,13 +170,13 @@ ALTER TABLE `productos`
 -- AUTO_INCREMENT de la tabla `reparaciones`
 --
 ALTER TABLE `reparaciones`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Restricciones para tablas volcadas
@@ -170,12 +188,6 @@ ALTER TABLE `usuarios`
 ALTER TABLE `pedidos`
   ADD CONSTRAINT `pedidos_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `pedidos_ibfk_2` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `reparaciones`
---
-ALTER TABLE `reparaciones`
-  ADD CONSTRAINT `reparaciones_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

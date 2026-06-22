@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Pedidos - Three Reparations</title>
+
+    <!-- PROTECCIÓN: solo clientes pueden entrar aquí -->
+    <script>
+        const usuarioCliente = JSON.parse(sessionStorage.getItem('usuario'));
+        if (!usuarioCliente) {
+            window.location.href = 'index.html';
+        } else if (usuarioCliente.rol === 'admin') {
+            window.location.href = 'admin.html';
+        }
+    </script>
+
+    <link rel="stylesheet" href="cliente.css">
+    <link rel="website icon" type="png" href="Imagenes/Three reparations.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="png" href="Imagenes/logo_three.png">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+
+
+    <style>
+        /* ===== Estilos específicos de Mis Pedidos ===== */
+        .pedidos-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pedidos-header h1 {
+            font-size: 24px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .btn-nuevo {
+            background: #7494ec;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .2s;
+            text-decoration: none;
+        }
+
+        .btn-nuevo:hover {
+            background: #5a7bd4;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            background: transparent;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab.activo {
+            color: #7494ec;
+            border-bottom-color: #7494ec;
+        }
+
+        .tab .contador {
+            background: #e5e7eb;
+            color: #374151;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tab.activo .contador {
+            background: #7494ec;
+            color: #fff;
+        }
+
+        /* Tabla */
+        .tabla-wrap {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+
+        .tabla {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .tabla thead {
+            background: #f8fafc;
+        }
+
+        .tabla thead th {
+            text-align: left;
+            padding: 14px 16px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .tabla tbody tr {
+            border-top: 1px solid #f1f5f9;
+            transition: background .15s;
+        }
+
+        .tabla tbody tr:hover {
+            background: #fafbff;
+        }
+
+        .tabla tbody td {
+            padding: 14px 16px;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        .tabla .id {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        /* Tipo: badge */
+        .tipo {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tipo.reparacion {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .tipo.pedido {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Estado: badge */
+        .estado {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+
+        .estado .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .estado.pendiente   { background: #fef3c7; color: #b45309; border-color: #fde68a; }
+        .estado.en_proceso  { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+        .estado.enviado     { background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
+        .estado.listo       { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+        .estado.entregado   { background: #d1fae5; color: #047857; border-color: #a7f3d0; }
+        .estado.cancelado   { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+
+        .vacio {
+            padding: 40px 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .vacio i {
+            font-size: 42px;
+            color: #cbd5e1;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* ====== Estilos del modal "Solicitar reparación" (igual que cliente.html) ====== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.activo {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-ventana {
+            background: #fff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.25s ease;
+        }
+
+        .modal-overlay.activo .modal-ventana { transform: scale(1) translateY(0); }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #7494ec, #5a7bd4);
+            color: #fff;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .modal-cerrar {
+            background: transparent; border: none; color: #fff;
+            font-size: 24px; cursor: pointer;
+            width: 32px; height: 32px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .modal-cerrar:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .modal-cuerpo { padding: 25px; }
+        .modal-cuerpo .campo { margin-bottom: 18px; }
+        .modal-cuerpo label {
+            display: block; font-size: 13px; font-weight: 600;
+            color: #444; margin-bottom: 6px;
+        }
+        .modal-cuerpo input,
+        .modal-cuerpo textarea {
+            width: 100%; padding: 11px 14px;
+            border: 1.5px solid #e0e0e0; border-radius: 8px;
+            font-size: 14px; font-family: inherit; color: #333;
+            outline: none; box-sizing: border-box;
+            transition: border-color .2s;
+        }
+        .modal-cuerpo input:focus,
+        .modal-cuerpo textarea:focus { border-color: #7494ec; }
+        .modal-cuerpo textarea { resize: vertical; min-height: 90px; }
+
+        .modal-footer {
+            display: flex; gap: 10px;
+            justify-content: flex-end;
+            padding: 15px 25px 25px;
+        }
+
+        .btn-modal {
+            padding: 10px 22px; border-radius: 8px;
+            font-size: 14px; font-weight: 600;
+            cursor: pointer; border: none;
+            font-family: inherit; transition: .2s;
+        }
+        .btn-modal.secundario { background: #f1f1f1; color: #555; }
+        .btn-modal.secundario:hover { background: #e5e5e5; }
+        .btn-modal.primario {
+            background: #7494ec; color: #fff;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-modal.primario:hover { background: #5a7bd4; }
+        .btn-modal.primario:disabled { opacity: .6; cursor: not-allowed; }
+
+        .modal-mensaje { padding: 0 25px 15px; min-height: 20px; font-size: 13px; font-weight: 500; }
+        .modal-mensaje.ok { color: #0f9d58; }
+        .modal-mensaje.error { color: #dc2626; }
+    </style>
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="cliente.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;">
+                <img src="Imagenes/logo_three.png" alt="Logo">
+                <span>Three Reparations</span>
+            </a>
+        </div>
+
+        <div class="navbar-user">
+            <div class="user-info">
+                <div class="user-avatar" id="avatar"></div>
+                <span id="nombreNavbar"></span>
+            </div>
+            <button class="btn-logout" onclick="cerrarSesion()">
+                <i class='bx bx-log-out'></i>
+                Cerrar sesión
+            </button>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO -->
+    <div class="container">
+
+        <div class="pedidos-header">
+            <h1><i class='bx bx-package'></i> Mis pedidos y reparaciones</h1>
+            <button class="btn-nuevo" id="btnNuevaReparacion">
+                <i class='bx bx-plus'></i>
+                Solicitar reparación
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab activo" data-tab="todos">
+                <i class='bx bx-list-ul'></i>
+                Todos
+                <span class="contador" id="contTodos">0</span>
+            </button>
+            <button class="tab" data-tab="reparaciones">
+                <i class='bx bx-wrench'></i>
+                Reparaciones
+                <span class="contador" id="contReparaciones">0</span>
+            </button>
+            <button class="tab" data-tab="pedidos">
+                <i class='bx bx-cart'></i>
+                Pedidos
+                <span class="contador" id="contPedidos">0</span>
+            </button>
+        </div>
+
+        <div class="tabla-wrap">
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">ID</th>
+                        <th style="width: 110px;">Tipo</th>
+                        <th style="width: 200px;">Dispositivo</th>
+                        <th>Causa de reparación</th>
+                        <th style="width: 130px;">Estado</th>
+                        <th style="width: 130px;">Total</th>
+                        <th style="width: 130px;">Fecha</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBody">
+                    <tr>
+                        <td colspan="7" class="vacio">Cargando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODAL: Solicitar reparación                  -->
+    <!-- ============================================ -->
+    <div class="modal-overlay" id="modalReparacion">
+        <div class="modal-ventana">
+            <div class="modal-header">
+                <h2><i class='bx bx-wrench'></i> Solicitar reparación</h2>
+                <button class="modal-cerrar" type="button" onclick="cerrarModalReparacion()">
+                    <i class='bx bx-x'></i>
+                </button>
+            </div>
+
+            <form id="formReparacion" novalidate>
+                <div class="modal-cuerpo">
+                    <div class="campo">
+                        <label for="repEquipo">Dispositivo *</label>
+                        <input type="text" id="repEquipo" maxlength="150"
+                               placeholder="Ej: iPhone 13, Notebook HP Pavilion...">
+                    </div>
+
+                    <div class="campo">
+                        <label for="repDescripcion">Causa de reparación *</label>
+                        <textarea id="repDescripcion"
+                                  placeholder="Cuéntanos qué le pasa al dispositivo (no enciende, pantalla rota, etc.)"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-mensaje" id="modalMensaje"></div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal secundario"
+                            onclick="cerrarModalReparacion()">Cancelar</button>
+                    <button type="submit" class="btn-modal primario" id="btnEnviarReparacion">
+                        <i class='bx bx-send'></i>
+                        Enviar solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        © 2026 Three Reparations · Todos los derechos reservados
+    </footer>
+
+    <script>
+        // ====== Datos del usuario ======
+        const nombre = usuarioCliente.nombre;
+        const inicial = nombre.charAt(0).toUpperCase();
+        document.getElementById('avatar').textContent = inicial;
+        document.getElementById('nombreNavbar').textContent = nombre;
+
+        function cerrarSesion() {
+            sessionStorage.removeItem('usuario');
+            window.location.href = 'index.html';
+        }
+
+        // ====== Estado de la página ======
+        let REPARACIONES = [];
+        let PEDIDOS = [];
+        let FILTRO_ACTUAL = 'todos';
+
+        // ====== Helpers ======
+        const ESTADO_LABELS = {
+            pendiente:  'Pendiente',
+            en_proceso: 'En proceso',
+            enviado:    'Enviado',
+            listo:      'Listo',
+            entregado:  'Entregado',
+            cancelado:  'Cancelado'
+        };
+
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str).replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        function formatearTotal(t) {
+            // null / undefined → aún sin cotizar
+            if (t === null || t === undefined || t === '') {
+                return '<span style="color:#94a3b8;font-style:italic;">Por cotizar</span>';
+            }
+            const num = Number(t);
+            if (isNaN(num)) return '—';
+            return new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: 'CLP',
+                maximumFractionDigits: 0
+            }).format(num);
+        }
+
+        function formatearFecha(ts) {
+            if (!ts) return '—';
+            const fecha = new Date(ts);
+            if (isNaN(fecha.getTime())) return '—';
+            const hoy = new Date();
+            const ayer = new Date(); ayer.setDate(hoy.getDate() - 1);
+            const hh = String(fecha.getHours()).padStart(2, '0');
+            const mm = String(fecha.getMinutes()).padStart(2, '0');
+            const mismaFecha = (a, b) =>
+                a.getFullYear() === b.getFullYear() &&
+                a.getMonth() === b.getMonth() &&
+                a.getDate() === b.getDate();
+            if (mismaFecha(fecha, hoy))  return `Hoy ${hh}:${mm}`;
+            if (mismaFecha(fecha, ayer)) return `Ayer ${hh}:${mm}`;
+            const d = String(fecha.getDate()).padStart(2, '0');
+            const m = String(fecha.getMonth() + 1).padStart(2, '0');
+            return `${d}/${m}/${fecha.getFullYear()}`;
+        }
+
+        // ====== Renderizado ======
+        function unificar() {
+            // Defensivo: si por alguna razón no son arrays, los convertimos en []
+            const repArr = Array.isArray(REPARACIONES) ? REPARACIONES : [];
+            const pedArr = Array.isArray(PEDIDOS) ? PEDIDOS : [];
+
+            // Reparaciones: datos directos del formulario "Solicitar reparación"
+            const filasRep = repArr.map(r => ({
+                tipo: 'reparacion',
+                id: r.id ?? '—',
+                dispositivo: r.equipo || '—',
+                causa: r.descripcion || '—',
+                estado: r.estado || 'pendiente',
+                total: r.total,
+                fecha: r.creado_en
+            }));
+
+            // Pedidos (compra de productos): reutilizan las mismas columnas
+            const filasPed = pedArr.map(p => ({
+                tipo: 'pedido',
+                id: p.id ?? '—',
+                dispositivo: p.servicio || p.producto_nombre || 'Producto',
+                causa: (p.cantidad !== undefined && p.cantidad !== null)
+                    ? `Cantidad: ${p.cantidad}` : '—',
+                estado: p.estado || 'pendiente',
+                total: p.total,
+                fecha: p.creado_en
+            }));
+
+            // Ordenar por fecha (descendente)
+            return [...filasRep, ...filasPed].sort((a, b) =>
+                new Date(b.fecha || 0) - new Date(a.fecha || 0)
+            );
+        }
+
+        // Estados que cuentan como "Reparación terminada"
+        const ESTADOS_TERMINADOS = ['listo', 'entregado'];
+
+        function esReparacionTerminada(f) {
+            return f.tipo === 'reparacion' && ESTADOS_TERMINADOS.includes(f.estado);
+        }
+        function esPedidoActivo(f) {
+            // Una reparación que aún NO está terminada se considera un "pedido"
+            // (= solicitud de servicio en curso). Las compras de productos
+            // siempre cuentan como pedidos.
+            if (f.tipo === 'pedido') return true;
+            if (f.tipo === 'reparacion' && !ESTADOS_TERMINADOS.includes(f.estado)) return true;
+            return false;
+        }
+
+        function filtrar(filas) {
+            if (FILTRO_ACTUAL === 'reparaciones') return filas.filter(esReparacionTerminada);
+            if (FILTRO_ACTUAL === 'pedidos')     return filas.filter(esPedidoActivo);
+            return filas;
+        }
+
+        function render() {
+            const tbody = document.getElementById('tablaBody');
+            const todas = unificar();
+            const visibles = filtrar(todas);
+
+            // Contadores: ahora se cuentan POR ESTADO, no por tabla.
+            // "Reparaciones" = terminadas (listo / entregado)
+            // "Pedidos"      = solicitudes en curso (pendiente / en_proceso / cancelado)
+            //                  + compras de productos
+            document.getElementById('contTodos').textContent        = todas.length;
+            document.getElementById('contReparaciones').textContent = todas.filter(esReparacionTerminada).length;
+            document.getElementById('contPedidos').textContent      = todas.filter(esPedidoActivo).length;
+
+            if (visibles.length === 0) {
+                let textoVacio = 'Aún no tienes pedidos ni reparaciones.';
+                if (FILTRO_ACTUAL === 'pedidos') {
+                    textoVacio = 'No tienes solicitudes en curso. Haz una nueva con el botón "+ Solicitar reparación".';
+                } else if (FILTRO_ACTUAL === 'reparaciones') {
+                    textoVacio = 'Todavía no tienes reparaciones completadas. Aparecerán aquí cuando el técnico marque tu solicitud como Lista o Entregada.';
+                }
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="vacio">
+                            <i class='bx bx-package'></i>
+                            ${textoVacio}
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = visibles.map(f => {
+                // El badge se decide por ESTADO, no por tabla:
+                // - Reparación TERMINADA (listo/entregado) → badge amarillo "Reparación"
+                // - Cualquier otra cosa (reparación en curso o pedido de producto)
+                //   → badge azul "Pedido"
+                const esRepTerminada = esReparacionTerminada(f);
+                const tipoVisual = esRepTerminada ? 'reparacion' : 'pedido';
+                const tipoLabel  = esRepTerminada ? 'Reparación' : 'Pedido';
+                const tipoIcon   = esRepTerminada ? 'bx-wrench'  : 'bx-cart';
+                const estadoLabel = ESTADO_LABELS[f.estado] || f.estado || '—';
+                const estadoCls = f.estado || '';
+                return `
+                    <tr>
+                        <td class="id">#${f.id}</td>
+                        <td>
+                            <span class="tipo ${tipoVisual}">
+                                <i class='bx ${tipoIcon}'></i>
+                                ${tipoLabel}
+                            </span>
+                        </td>
+                        <td><strong>${escapeHtml(f.dispositivo)}</strong></td>
+                        <td>${escapeHtml(f.causa)}</td>
+                        <td>
+                            <span class="estado ${estadoCls}">
+                                <span class="dot"></span>
+                                ${escapeHtml(estadoLabel)}
+                            </span>
+                        </td>
+                        <td>${formatearTotal(f.total)}</td>
+                        <td>${formatearFecha(f.fecha)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ====== Carga desde el backend ======
+        async function cargarTodo() {
+            // Validamos que el usuario tenga un id válido antes de hacer fetch
+            if (!usuarioCliente || !usuarioCliente.id) {
+                console.error('No hay id de usuario en sesión:', usuarioCliente);
+                REPARACIONES = [];
+                PEDIDOS = [];
+                render();
+                return;
+            }
+
+            const idUsuario = usuarioCliente.id;
+            console.log('Cargando datos para usuario id =', idUsuario);
+
+            try {
+                const [resRep, resPed] = await Promise.all([
+                    fetch(`/api/reparaciones/usuario/${idUsuario}`),
+                    fetch(`/api/pedidos/usuario/${idUsuario}`)
+                ]);
+
+                // Reparaciones
+                if (resRep.ok) {
+                    const datosRep = await resRep.json();
+                    REPARACIONES = Array.isArray(datosRep) ? datosRep : [];
+                    console.log('Reparaciones recibidas:', REPARACIONES);
+                } else {
+                    console.error('Error en /api/reparaciones/usuario:', resRep.status, await resRep.text());
+                    REPARACIONES = [];
+                }
+
+                // Pedidos
+                if (resPed.ok) {
+                    const datosPed = await resPed.json();
+                    PEDIDOS = Array.isArray(datosPed) ? datosPed : [];
+                    console.log('Pedidos recibidos:', PEDIDOS);
+                } else {
+                    console.error('Error en /api/pedidos/usuario:', resPed.status, await resPed.text());
+                    PEDIDOS = [];
+                }
+            } catch (err) {
+                console.error('Error cargando datos:', err);
+                REPARACIONES = [];
+                PEDIDOS = [];
+            }
+            render();
+        }
+
+        // ====== Tabs ======
+        document.querySelectorAll('.tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(b => b.classList.remove('activo'));
+                btn.classList.add('activo');
+                FILTRO_ACTUAL = btn.dataset.tab;
+                render();
+            });
+        });
+
+        // ====== Modal solicitar reparación ======
+        const modal = document.getElementById('modalReparacion');
+        const form  = document.getElementById('formReparacion');
+        const mensaje  = document.getElementById('modalMensaje');
+        const btnEnviar = document.getElementById('btnEnviarReparacion');
+
+        document.getElementById('btnNuevaReparacion').addEventListener('click', abrirModalReparacion);
+
+        function abrirModalReparacion() {
+            mensaje.textContent = '';
+            mensaje.className = 'modal-mensaje';
+            form.reset();
+            modal.classList.add('activo');
+            setTimeout(() => document.getElementById('repEquipo').focus(), 100);
+        }
+
+        function cerrarModalReparacion() {
+            modal.classList.remove('activo');
+        }
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) cerrarModalReparacion();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('activo')) cerrarModalReparacion();
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const equipo = document.getElementById('repEquipo').value.trim();
+            const descripcion = document.getElementById('repDescripcion').value.trim();
+
+            if (!equipo || !descripcion) {
+                mensaje.textContent = 'Completa todos los campos.';
+                mensaje.className = 'modal-mensaje error';
+                return;
+            }
+
+            btnEnviar.disabled = true;
+            const textoOriginal = btnEnviar.innerHTML;
+            btnEnviar.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Enviando...`;
+            mensaje.textContent = '';
+            mensaje.className = 'modal-mensaje';
+
+            try {
+                const res = await fetch('/api/reparaciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        usuario_id: usuarioCliente.id,
+                        equipo,
+                        descripcion
+                    })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    mensaje.textContent = `✓ ${data.mensaje || 'Solicitud enviada'} (ID #${data.id})`;
+                    mensaje.className = 'modal-mensaje ok';
+                    form.reset();
+                    // Refrescar la lista para que aparezca la nueva reparación
+                    await cargarTodo();
+                    setTimeout(() => cerrarModalReparacion(), 1200);
+                } else {
+                    mensaje.textContent = data.error || `Error ${res.status}`;
+                    mensaje.className = 'modal-mensaje error';
+                }
+            } catch (err) {
+                console.error(err);
+                mensaje.textContent = 'No se pudo conectar con el servidor.';
+                mensaje.className = 'modal-mensaje error';
+            } finally {
+                btnEnviar.disabled = false;
+                btnEnviar.innerHTML = textoOriginal;
+            }
+        });
+
+        // Inicial
+        cargarTodo();
+    </script>
+</body>
+
+</html>

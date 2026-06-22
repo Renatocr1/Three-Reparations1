@@ -1,39 +1,53 @@
 // ============================================
-// Servidor Three Reparations
+// Servidor Express — Three Reparations
+// Archivo: server.js
 // ============================================
 const express = require('express');
-const cors = require('cors');
 const path = require('path');
-
-// Importar conexión y rutas
 const { probarConexion } = require('./db/conexion');
-const usuarioRoutes = require('./routes/usuarioRoutes');
-/* const productoRoutes = require('./routes/productoRoutes'); */
-const pedidoRoutes = require('./routes/pedidoRoutes');
-const reparacionRoutes = require('./routes/Reparacionroutes');
+
+// Rutas
+const usuarioRoutes     = require('./routes/UsuarioRoutes');
+const reparacionRoutes  = require('./routes/Reparacionroutes');
+const pedidoRoutes      = require('./routes/PedidoRoutes');
 
 const app = express();
-const PUERTO = 3000;
+const PORT = 3000;
 
 // Middlewares
-app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: true }));
 
-// Rutas de la API
+// Archivos estáticos del front (public/) — sin caché para desarrollo
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  lastModified: false,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    }
+  }
+}));
+
+// API — todas las rutas se montan bajo /api
+// /api/registro, /api/login, /api/usuarios, /api/usuarios/:id, ...
 app.use('/api', usuarioRoutes);
-/* app.use('/api', productoRoutes); */
-app.use('/api', pedidoRoutes);
+// /api/reparaciones, /api/reparaciones/usuario/:id, ...
 app.use('/api', reparacionRoutes);
+// /api/pedidos, /api/pedidos/usuario/:id, ...
+app.use('/api', pedidoRoutes);
 
-// Iniciar servidor
-async function iniciar() {
-  const conectado = await probarConexion();
-  if (!conectado) process.exit(1);
+// Iniciamos el servidor
+(async () => {
+  const ok = await probarConexion();
+  if (!ok) {
+    console.error('No se pudo conectar a la base de datos. Abortando arranque.');
+    process.exit(1);
+  }
 
-  app.listen(PUERTO, () => {
-    console.log(`Servidor corriendo en http://localhost:${PUERTO}`);
+  app.listen(PORT, () => {
+    console.log('========================================');
+    console.log(` Servidor corriendo en http://localhost:${PORT}`);
+    console.log('========================================');
   });
-}
-
-iniciar();
+})();

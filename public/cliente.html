@@ -18,270 +18,181 @@
     <link rel="stylesheet" href="cliente.css">
     <link rel="website icon" type="png" href="Imagenes/Three reparations.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="png" href="Imagenes/logo_three.png">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
 
-    <!-- <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+    <style>
+        /* ====== Estilos del modal "Solicitar reparación" ====== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.activo {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-ventana {
+            background: #fff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.25s ease;
             font-family: 'Montserrat', sans-serif;
         }
 
-        body {
-            background: linear-gradient(135deg, #e2e2e2, #c9d6ff);
-            min-height: 100vh;
-            color: #333;
+        .modal-overlay.activo .modal-ventana {
+            transform: scale(1) translateY(0);
         }
 
-        /* ---------- NAVBAR ---------- */
-        .navbar {
-            background: #fff;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            padding: 15px 40px;
+        .modal-header {
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #7494ec, #5a7bd4);
+            color: #fff;
         }
 
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .navbar-brand img {
-            width: 45px;
-            height: 45px;
-            object-fit: contain;
-        }
-
-        .navbar-brand span {
-            font-size: 20px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .navbar-user {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .user-info {
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 10px;
+            margin: 0;
+        }
+
+        .modal-cerrar {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .modal-cerrar:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-cuerpo {
+            padding: 25px;
+        }
+
+        .modal-cuerpo .campo {
+            margin-bottom: 18px;
+        }
+
+        .modal-cuerpo label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 6px;
+        }
+
+        .modal-cuerpo input,
+        .modal-cuerpo textarea,
+        .modal-cuerpo select {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #333;
+            transition: border-color 0.2s;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .modal-cuerpo input:focus,
+        .modal-cuerpo textarea:focus,
+        .modal-cuerpo select:focus {
+            border-color: #7494ec;
+        }
+
+        .modal-cuerpo textarea {
+            resize: vertical;
+            min-height: 90px;
+            font-family: inherit;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 15px 25px 25px;
+        }
+
+        .btn-modal {
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-modal.secundario {
+            background: #f1f1f1;
             color: #555;
         }
 
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+        .btn-modal.secundario:hover {
+            background: #e5e5e5;
+        }
+
+        .btn-modal.primario {
             background: #7494ec;
             color: #fff;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
+            gap: 8px;
         }
 
-        .btn-logout {
-            background: transparent;
-            border: 2px solid #7494ec;
-            color: #7494ec;
-            padding: 8px 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .btn-modal.primario:hover {
+            background: #5a7bd4;
         }
 
-        .btn-logout:hover {
-            background: #7494ec;
-            color: #fff;
+        .btn-modal.primario:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
-        /* ---------- CONTENIDO ---------- */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        /* Hero / Bienvenida */
-        .hero {
-            background: linear-gradient(135deg, #7494ec, #5a7bd4);
-            color: #fff;
-            padding: 40px;
-            border-radius: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(116, 148, 236, 0.3);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .hero-text h1 {
-            font-size: 32px;
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
-
-        .hero-text p {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-
-        .hero-icon {
-            font-size: 80px;
-            opacity: 0.3;
-        }
-
-        /* Sección de accesos rápidos */
-        .seccion-titulo {
-            font-size: 22px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .seccion-titulo i {
-            color: #7494ec;
-        }
-
-        .grid-tarjetas {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .tarjeta {
-            background: #fff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            transition: 0.3s;
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-        }
-
-        .tarjeta:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(116, 148, 236, 0.2);
-        }
-
-        .tarjeta-icono {
-            width: 55px;
-            height: 55px;
-            border-radius: 12px;
-            background: #eef2ff;
-            color: #7494ec;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            margin-bottom: 5px;
-        }
-
-        .tarjeta h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .tarjeta p {
-            font-size: 14px;
-            color: #777;
-            line-height: 1.5;
-        }
-
-        /* Sección de información de cuenta */
-        .info-cuenta {
-            background: #fff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .info-item {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .info-item label {
-            font-size: 12px;
-            color: #999;
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .info-item span {
-            font-size: 16px;
-            color: #333;
+        .modal-mensaje {
+            padding: 0 25px 15px;
+            min-height: 20px;
+            font-size: 13px;
             font-weight: 500;
         }
 
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 30px 20px;
-            color: #777;
-            font-size: 14px;
-        }
-
-        /* Responsive */
-        @media (max-width: 650px) {
-            .navbar {
-                padding: 15px 20px;
-            }
-
-            .user-info span {
-                display: none;
-            }
-
-            .hero {
-                padding: 30px 25px;
-            }
-
-            .hero-text h1 {
-                font-size: 24px;
-            }
-
-            .hero-icon {
-                display: none;
-            }
-        }
-    </style> -->
+        .modal-mensaje.ok { color: #0f9d58; }
+        .modal-mensaje.error { color: #dc2626; }
+    </style>
 </head>
 
 <body>
@@ -323,14 +234,6 @@
         </h2>
 
         <div class="grid-tarjetas">
-            <!-- <a href="productos.html" class="tarjeta">
-                <div class="tarjeta-icono">
-                    <i class='bx bx-store'></i>
-                </div>
-                <h3>Ver productos</h3>
-                <p>Explora nuestro catálogo de productos y servicios.</p>
-            </a> -->
-
             <a href="pedidosCliente.html" class="tarjeta">
                 <div class="tarjeta-icono">
                     <i class='bx bx-package'></i>
@@ -339,7 +242,8 @@
                 <p>Revisa el estado de tus pedidos y reparaciones.</p>
             </a>
 
-            <a href="#" class="tarjeta">
+            <!-- Esta tarjeta ahora abre el modal -->
+            <a href="#" class="tarjeta" id="tarjetaReparacion">
                 <div class="tarjeta-icono">
                     <i class='bx bx-wrench'></i>
                 </div>
@@ -384,13 +288,54 @@
         </div>
     </div>
 
+    <!-- ============================================ -->
+    <!-- MODAL: Solicitar reparación                  -->
+    <!-- ============================================ -->
+    <div class="modal-overlay" id="modalReparacion">
+        <div class="modal-ventana">
+            <div class="modal-header">
+                <h2><i class='bx bx-wrench'></i> Solicitar reparación</h2>
+                <button class="modal-cerrar" type="button" onclick="cerrarModalReparacion()">
+                    <i class='bx bx-x'></i>
+                </button>
+            </div>
+
+            <form id="formReparacion" novalidate>
+                <div class="modal-cuerpo">
+                    <div class="campo">
+                        <label for="repEquipo">Dispositivo *</label>
+                        <input type="text" id="repEquipo" maxlength="150"
+                               placeholder="Ej: iPhone 13, Notebook HP Pavilion...">
+                    </div>
+
+                    <div class="campo">
+                        <label for="repDescripcion">Causa de reparación *</label>
+                        <textarea id="repDescripcion"
+                                  placeholder="Cuéntanos qué le pasa al dispositivo (no enciende, pantalla rota, etc.)"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-mensaje" id="modalMensaje"></div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal secundario"
+                            onclick="cerrarModalReparacion()">Cancelar</button>
+                    <button type="submit" class="btn-modal primario" id="btnEnviarReparacion">
+                        <i class='bx bx-send'></i>
+                        Enviar solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- FOOTER -->
     <footer class="footer">
         © 2026 Three Reparations · Todos los derechos reservados
     </footer>
 
     <script>
-        // Rellena los datos del usuario
+        // ====== Datos del usuario en la página ======
         const nombre = usuarioCliente.nombre;
         const inicial = nombre.charAt(0).toUpperCase();
 
@@ -407,6 +352,100 @@
             sessionStorage.removeItem('usuario');
             window.location.href = 'index.html';
         }
+
+        // ====== Lógica del modal "Solicitar reparación" ======
+        const modal = document.getElementById('modalReparacion');
+        const form = document.getElementById('formReparacion');
+        const mensaje = document.getElementById('modalMensaje');
+        const btnEnviar = document.getElementById('btnEnviarReparacion');
+
+        // Abrir el modal al clickear la tarjeta
+        document.getElementById('tarjetaReparacion').addEventListener('click', (e) => {
+            e.preventDefault();
+            abrirModalReparacion();
+        });
+
+        function abrirModalReparacion() {
+            mensaje.textContent = '';
+            mensaje.className = 'modal-mensaje';
+            form.reset();
+            modal.classList.add('activo');
+            // Pequeño delay para que el navegador aplique display:flex antes del focus
+            setTimeout(() => document.getElementById('repEquipo').focus(), 100);
+        }
+
+        function cerrarModalReparacion() {
+            modal.classList.remove('activo');
+        }
+
+        // Cerrar al hacer click fuera de la ventana
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) cerrarModalReparacion();
+        });
+
+        // Cerrar con tecla Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('activo')) {
+                cerrarModalReparacion();
+            }
+        });
+
+        // Submit del formulario
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const equipo = document.getElementById('repEquipo').value.trim();
+            const descripcion = document.getElementById('repDescripcion').value.trim();
+
+            if (!equipo || !descripcion) {
+                mensaje.textContent = 'Completa todos los campos.';
+                mensaje.className = 'modal-mensaje error';
+                return;
+            }
+
+            // Estado de carga
+            btnEnviar.disabled = true;
+            const textoOriginal = btnEnviar.innerHTML;
+            btnEnviar.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Enviando...`;
+            mensaje.textContent = '';
+            mensaje.className = 'modal-mensaje';
+
+            try {
+                const res = await fetch('/api/reparaciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        usuario_id: usuarioCliente.id,
+                        equipo,
+                        descripcion
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    mensaje.textContent = `✓ ${data.mensaje || 'Solicitud enviada'} (ID #${data.id})`;
+                    mensaje.className = 'modal-mensaje ok';
+                    form.reset();
+
+                    // Llevamos al cliente a "Mis pedidos" para que vea su reparación recién creada
+                    setTimeout(() => {
+                        cerrarModalReparacion();
+                        window.location.href = 'pedidosCliente.html';
+                    }, 1200);
+                } else {
+                    mensaje.textContent = data.error || `Error ${res.status}`;
+                    mensaje.className = 'modal-mensaje error';
+                }
+            } catch (err) {
+                console.error(err);
+                mensaje.textContent = 'No se pudo conectar con el servidor.';
+                mensaje.className = 'modal-mensaje error';
+            } finally {
+                btnEnviar.disabled = false;
+                btnEnviar.innerHTML = textoOriginal;
+            }
+        });
     </script>
 </body>
 

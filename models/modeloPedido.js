@@ -2,39 +2,33 @@ const { pool } = require('../db/conexion');
 
 const Pedido = {
 
-  // Lista todos los pedidos con nombre + correo del cliente, producto y servicio
-  // models/modeloPedido.js
-  // models/modeloPedido.js
-  listarTodos: async () => {
-    try {
-      const sql = `
-        SELECT 
-          p.id,
-          u.nombre AS cliente_nombre,
-          u.correo AS cliente_correo,
-          p.servicio,
-          p.estado,
-          p.total,
-          p.creado_en
-        FROM pedidos p
-        INNER JOIN usuarios u ON p.usuario_id = u.id
-        LEFT JOIN productos pr ON p.producto_id = pr.id
-        ORDER BY p.id DESC
-      `;
-      const [rows] = await pool.query(sql);
-      return rows;
-    } catch (error) {
-      console.error('Error en listarTodos:', error.message);
-      throw error;
-    }
+  async listarTodos() {
+    const sql = `
+      SELECT
+        p.id              AS id,
+        u.nombre          AS cliente_nombre,
+        u.correo          AS cliente_correo,
+        COALESCE(p.servicio, pr.nombre) AS servicio,
+        p.estado          AS estado,
+        p.total           AS total,
+        p.fecha           AS fecha,
+        p.cantidad        AS cantidad,
+        p.usuario_id      AS usuario_id,
+        p.producto_id     AS producto_id
+      FROM pedidos p
+      INNER JOIN usuarios  u  ON p.usuario_id  = u.id
+      INNER JOIN productos pr ON p.producto_id = pr.id
+      ORDER BY p.id DESC
+    `;
+    const [filas] = await pool.query(sql);
+    return filas;
   },
 
-  // Lista los pedidos de un cliente en particular
   async listarPorUsuario(usuarioId) {
     const [filas] = await pool.query(`
-      SELECT 
-        p.id, p.cantidad, p.total, p.estado, p.servicio, p.creado_en,
-        pr.nombre AS producto_nombre, pr.precio AS producto_precio
+      SELECT p.id, p.cantidad, p.total, p.estado,
+        COALESCE(p.servicio, pr.nombre) AS servicio,
+        p.fecha, pr.nombre AS producto_nombre, pr.precio AS producto_precio
       FROM pedidos p
       INNER JOIN productos pr ON p.producto_id = pr.id
       WHERE p.usuario_id = ?
@@ -43,7 +37,6 @@ const Pedido = {
     return filas;
   },
 
-  // NUEVO: Crear un pedido
   async crear({ usuario_id, producto_id, cantidad, total, estado, servicio }) {
     const [resultado] = await pool.query(
       `INSERT INTO pedidos (usuario_id, producto_id, cantidad, total, estado, servicio)
@@ -54,21 +47,37 @@ const Pedido = {
   },
 
   async actualizarEstado(id, estado) {
-    const [resultado] = await pool.query(
-      'UPDATE pedidos SET estado = ? WHERE id = ?',
-      [estado, id]
-    );
+    const [resultado] = await pool.query('UPDATE pedidos SET estado = ? WHERE id = ?', [estado, id]);
     return resultado.affectedRows > 0;
   },
 
   async eliminar(id) {
+    const [resultado] = await pool.query('DELETE FROM pedidos WHERE id = ?', [id]);
+    return resultado.affectedRows > 0;
+  },
+
+  async actualizar(id, { estado, total }) {
+    const campos = [];
+    const params = [];
+
+    if (estado !== undefined) {
+      campos.push('estado = ?');
+      params.push(estado);
+    }
+    if (total !== undefined) {
+      const t = (total === null || total === '') ? null : parseFloat(total);
+      campos.push('total = ?');
+      params.push(t);
+    }
+    if (campos.length === 0) return false;
+
+    params.push(id);
     const [resultado] = await pool.query(
-      'DELETE FROM pedidos WHERE id = ?',
-      [id]
+      `UPDATE pedidos SET ${campos.join(', ')} WHERE id = ?`,
+      params
     );
     return resultado.affectedRows > 0;
-  }
-
+  },
 };
 
 
