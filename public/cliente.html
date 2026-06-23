@@ -304,12 +304,10 @@
                 <div class="modal-cuerpo">
                     <div class="campo">
                         <label for="repTipo">Tipo de dispositivo *</label>
-                        <select id="repTipo">
+                        <select id="repTipo" onchange="actualizarPlaceholder()">
                             <option value="">Seleccione el tipo...</option>
                             <option value="Computador">Computador</option>
                             <option value="Telefono">Teléfono móvil</option>
-                            <option value="Tablet">Tablet</option>
-                            <option value="Otro">Otro</option>
                         </select>
                     </div>
                     <div class="campo">
@@ -318,11 +316,11 @@
                     </div>
                     <div class="campo">
                         <label for="repModelo">Modelo *</label>
-                        <input type="text" id="repModelo" placeholder="Ej: Galaxy S23, MacBook Air, iPad Pro...">
+                        <input type="text" id="repModelo" placeholder="Seleccione el tipo primero...">
                     </div>
                     <div class="campo">
                         <label for="repDescripcion">Descripción del problema *</label>
-                        <textarea id="repDescripcion" placeholder="Describe los síntomas (mínimo 20 caracteres)..."></textarea>
+                        <textarea id="repDescripcion" placeholder="Cuéntanos qué le pasa al dispositivo..."></textarea>
                     </div>
                 </div>
 
@@ -401,6 +399,21 @@
         });
 
         // Submit del formulario
+        // Función para cambiar el placeholder según el tipo de dispositivo
+function actualizarPlaceholder() {
+    const tipo = document.getElementById('repTipo').value;
+    const inputModelo = document.getElementById('repModelo');
+    
+    if (tipo === 'Computador') {
+        inputModelo.placeholder = 'Ej: MacBook Pro, Pavilion 15, ThinkPad X1...';
+    } else if (tipo === 'Telefono') {
+        inputModelo.placeholder = 'Ej: iPhone 15, Galaxy S23, Pixel 8...';
+    } else {
+        inputModelo.placeholder = 'Seleccione el tipo primero...';
+    }
+}
+
+        // Actualización del submit para capturar los nuevos campos
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -409,26 +422,16 @@
             const modelo = document.getElementById('repModelo').value.trim();
             const descripcion = document.getElementById('repDescripcion').value.trim();
 
-            // Validación de campos vacíos
             if (!tipo || !marca || !modelo || !descripcion) {
                 mensaje.textContent = 'Por favor, completa todos los campos.';
                 mensaje.className = 'modal-mensaje error';
                 return;
             }
 
-            // Validación de longitud mínima (evitar descripciones vacías o sin contexto)
-            if (descripcion.length < 20) {
-                mensaje.textContent = 'La descripción es muy corta. Por favor, detalla mejor el problema.';
-                mensaje.className = 'modal-mensaje error';
-                return;
-            }
-
-            // Estado de carga
             btnEnviar.disabled = true;
             const textoOriginal = btnEnviar.innerHTML;
             btnEnviar.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Enviando...`;
             mensaje.textContent = '';
-            mensaje.className = 'modal-mensaje';
 
             try {
                 const res = await fetch('/api/reparaciones', {
@@ -449,18 +452,16 @@
                     mensaje.textContent = `✓ Solicitud enviada (ID #${data.id})`;
                     mensaje.className = 'modal-mensaje ok';
                     form.reset();
-
                     setTimeout(() => {
                         cerrarModalReparacion();
                         window.location.href = 'pedidosCliente.html';
                     }, 1200);
                 } else {
-                    mensaje.textContent = data.error || `Error ${res.status}`;
+                    mensaje.textContent = data.error || 'Error al enviar.';
                     mensaje.className = 'modal-mensaje error';
                 }
             } catch (err) {
-                console.error(err);
-                mensaje.textContent = 'No se pudo conectar con el servidor.';
+                mensaje.textContent = 'Error de conexión.';
                 mensaje.className = 'modal-mensaje error';
             } finally {
                 btnEnviar.disabled = false;
