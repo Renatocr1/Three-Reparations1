@@ -631,49 +631,43 @@
 
         // ====== Carga desde el backend ======
         async function cargarTodo() {
-            // Validamos que el usuario tenga un id válido antes de hacer fetch
             if (!usuarioCliente || !usuarioCliente.id) {
-                console.error('No hay id de usuario en sesión:', usuarioCliente);
-                REPARACIONES = [];
-                PEDIDOS = [];
-                render();
+                console.warn('No hay usuario en sesión, abortando carga.');
                 return;
             }
 
             const idUsuario = usuarioCliente.id;
-            console.log('Cargando datos para usuario id =', idUsuario);
+            console.log('--- Iniciando carga para usuario:', idUsuario);
 
             try {
-                const [resRep, resPed] = await Promise.all([
-                    fetch(`/api/reparaciones/usuario/${idUsuario}`),
-                    fetch(`/api/pedidos/usuario/${idUsuario}`)
-                ]);
+                // Ejecutamos las peticiones por separado para ver cuál falla
+                const resRep = await fetch(`/api/reparaciones/usuario/${idUsuario}`);
+                const resPed = await fetch(`/api/pedidos/usuario/${idUsuario}`);
 
-                // Reparaciones
+                console.log('Reparaciones status:', resRep.status);
+                console.log('Pedidos status:', resPed.status);
+
                 if (resRep.ok) {
                     const datosRep = await resRep.json();
                     REPARACIONES = Array.isArray(datosRep) ? datosRep : [];
-                    console.log('Reparaciones recibidas:', REPARACIONES);
+                    console.log('Reparaciones cargadas:', REPARACIONES);
                 } else {
-                    console.error('Error en /api/reparaciones/usuario:', resRep.status, await resRep.text());
-                    REPARACIONES = [];
+                    console.error('ERROR al traer reparaciones:', await resRep.text());
                 }
 
-                // Pedidos
                 if (resPed.ok) {
                     const datosPed = await resPed.json();
                     PEDIDOS = Array.isArray(datosPed) ? datosPed : [];
-                    console.log('Pedidos recibidos:', PEDIDOS);
+                    console.log('Pedidos cargados:', PEDIDOS);
                 } else {
-                    console.error('Error en /api/pedidos/usuario:', resPed.status, await resPed.text());
-                    PEDIDOS = [];
+                    console.error('ERROR al traer pedidos:', await resPed.text());
                 }
+
             } catch (err) {
-                console.error('Error cargando datos:', err);
-                REPARACIONES = [];
-                PEDIDOS = [];
+                console.error('Error crítico en fetch:', err);
             }
-            render();
+            
+            render(); // Forzamos el renderizado final
         }
 
         // ====== Tabs ======
