@@ -374,13 +374,13 @@
         });
 
         function abrirModalReparacion() {
-            mensaje.textContent = '';
-            mensaje.className = 'modal-mensaje';
-            form.reset();
-            modal.classList.add('activo');
-            // Pequeño delay para que el navegador aplique display:flex antes del focus
-            setTimeout(() => document.getElementById('repEquipo').focus(), 100);
-        }
+        mensaje.textContent = '';
+        mensaje.className = 'modal-mensaje';
+        form.reset();
+        modal.classList.add('activo');
+        // Corregido: apuntas a 'repTipo' en lugar de 'repEquipo'
+        setTimeout(() => document.getElementById('repTipo').focus(), 100);
+    }
 
         function cerrarModalReparacion() {
             modal.classList.remove('activo');
