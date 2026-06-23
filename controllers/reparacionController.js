@@ -4,7 +4,7 @@
 // ============================================
 const Reparacion = require('../models/modeloReparacion');
 
-const ESTADOS_VALIDOS = ['pendiente', 'en_proceso', 'enviado', 'listo', 'entregado', 'cancelado'];
+const ESTADOS_VALIDOS = ['pendiente', 'en_diagnostico', 'en_reparacion', 'finalizado', 'entregado'];
 
 const reparacionController = {
 
@@ -55,16 +55,22 @@ const reparacionController = {
       if (!modelo || modelo.trim() === '') {
         return res.status(400).json({ error: 'El modelo es obligatorio' });
       }
-      if (!descripcion || descripcion.trim() === '' || descripcion.length < 5) {
-        return res.status(400).json({ error: 'La descripción es obligatoria y debe ser mayor a 5 caracteres' });
+      if (!descripcion || descripcion.trim() === '' || descripcion.length < 15) {
+        return res.status(400).json({ error: 'La descripción es obligatoria y debe tener al menos 15 caracteres' });
       }
 
       // 4. Combinamos todo en la variable 'equipo' que tu modelo espera
       const equipoConcatenado = `${tipo} - ${marca} ${modelo}`;
+      // fecha_problema: si el frontend no lo envía, usamos la fecha actual
+      const hoy = new Date();
+      const fechaProblema = hoy.toISOString().slice(0, 10); // YYYY-MM-DD
 
       const nuevoId = await Reparacion.crear({
         usuario_id: idNum,
-        equipo: equipoConcatenado, // Enviamos el equipo unido
+        equipo: equipoConcatenado,
+        marca: marca.trim(),
+        modelo: modelo.trim(),
+        fecha_problema: fechaProblema,
         descripcion: descripcion.trim()
       });
 
@@ -81,19 +87,33 @@ const reparacionController = {
 
   async cambiarEstado(req, res) {
     try {
-      const { estado, total } = req.body;
+      const { estado, total, usuario_id } = req.body;
       if (!ESTADOS_VALIDOS.includes(estado)) {
-        return res.status(400).json({ error: 'Estado inválido' });
+        return res.status(400).json({ error: 'Estado inválido. Estados válidos: ' + ESTADOS_VALIDOS.join(', ') });
       }
       const totalNum = (total !== null && total !== undefined && total !== '') ? parseFloat(total) : null;
-      console.log(`[PUT reparacion] id=${req.params.id} estado=${estado} total=${totalNum}`);
-      const actualizado = await Reparacion.actualizarEstado(req.params.id, estado, totalNum);
-      console.log(`[PUT reparacion] affectedRows=${actualizado}`);
+      console.log(`[PUT reparacion] id=${req.params.id} estado=${estado} total=${totalNum} usuario_admin=${usuario_id}`);
+      const actualizado = await Reparacion.actualizarEstado(req.params.id, estado, totalNum, usuario_id);
+      console.log(`[PUT reparacion] actualizado=${actualizado}`);
       if (!actualizado) return res.status(404).json({ error: 'Reparación no encontrada' });
       return res.json({ mensaje: 'Estado y total actualizados', total: totalNum });
     } catch (error) {
       console.error(error);
       return res.status(500).json({ error: 'Error al actualizar reparación' });
+    }
+  },
+
+  async obtenerHistorial(req, res) {
+    try {
+      const reparacionId = parseInt(req.params.id, 10);
+      if (isNaN(reparacionId)) {
+        return res.status(400).json({ error: 'ID de reparación inválido' });
+      }
+      const historial = await Reparacion.obtenerHistorial(reparacionId);
+      return res.json(historial);
+    } catch (error) {
+      console.error('Error al obtener historial:', error);
+      return res.status(500).json({ error: 'Error al obtener historial' });
     }
   },
 

@@ -415,8 +415,8 @@
             mensaje.className = 'modal-mensaje error';
             return;
         }
-        if (descripcion.length < 5) {
-            mensaje.textContent = 'La descripción es muy corta.';
+        if (descripcion.length < 15) {
+            mensaje.textContent = 'La descripción debe tener al menos 15 caracteres.';
             mensaje.className = 'modal-mensaje error';
             return;
         }
@@ -442,9 +442,12 @@
             const data = await res.json();
 
             if (res.ok) {
+                console.log('Reparacion creada:', data);
                 mensaje.textContent = `✓ Solicitud enviada (ID #${data.id})`;
                 mensaje.className = 'modal-mensaje ok';
                 form.reset();
+                // Guardamos el id para forzar refresco / destacar en la página de pedidos
+                try { sessionStorage.setItem('nuevaReparacionId', String(data.id)); } catch (e) { /* noop */ }
                 setTimeout(() => {
                     cerrarModalReparacion();
                     window.location.href = 'pedidosCliente.html';

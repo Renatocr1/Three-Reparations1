@@ -410,26 +410,29 @@
             <form id="formReparacion" novalidate>
                 <div class="modal-cuerpo">
                     <div class="campo">
-                        <label for="repEquipo">Dispositivo *</label>
-                        <input type="text" id="repEquipo" maxlength="150"
-                               placeholder="Ej: iPhone 13, Notebook HP Pavilion...">
+                        <label for="repTipo">Tipo de dispositivo *</label>
+                        <input type="text" id="repTipo" placeholder="Ej: Computador, Teléfono, Tablet...">
                     </div>
-
                     <div class="campo">
-                        <label for="repDescripcion">Causa de reparación *</label>
-                        <textarea id="repDescripcion"
-                                  placeholder="Cuéntanos qué le pasa al dispositivo (no enciende, pantalla rota, etc.)"></textarea>
+                        <label for="repMarca">Marca *</label>
+                        <input type="text" id="repMarca" placeholder="Ej: Samsung, Apple...">
+                    </div>
+                    <div class="campo">
+                        <label for="repModelo">Modelo *</label>
+                        <input type="text" id="repModelo" placeholder="Ej: iPhone 15, MacBook...">
+                    </div>
+                    <div class="campo">
+                        <label for="repDescripcion">Descripción del problema *</label>
+                        <textarea id="repDescripcion" placeholder="Cuéntanos qué le pasa..."></textarea>
                     </div>
                 </div>
 
                 <div class="modal-mensaje" id="modalMensaje"></div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn-modal secundario"
-                            onclick="cerrarModalReparacion()">Cancelar</button>
+                    <button type="button" class="btn-modal secundario" onclick="cerrarModalReparacion()">Cancelar</button>
                     <button type="submit" class="btn-modal primario" id="btnEnviarReparacion">
-                        <i class='bx bx-send'></i>
-                        Enviar solicitud
+                        <i class='bx bx-send'></i> Enviar solicitud
                     </button>
                 </div>
             </form>
@@ -693,7 +696,7 @@
             mensaje.className = 'modal-mensaje';
             form.reset();
             modal.classList.add('activo');
-            setTimeout(() => document.getElementById('repEquipo').focus(), 100);
+            setTimeout(() => document.getElementById('repTipo').focus(), 100);
         }
 
         function cerrarModalReparacion() {
@@ -710,11 +713,29 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const equipo = document.getElementById('repEquipo').value.trim();
+            const tipoInput = document.getElementById('repTipo').value.trim();
+            const marca = document.getElementById('repMarca').value.trim();
+            const modelo = document.getElementById('repModelo').value.trim();
             const descripcion = document.getElementById('repDescripcion').value.trim();
 
-            if (!equipo || !descripcion) {
-                mensaje.textContent = 'Completa todos los campos.';
+            if (tipoInput === "") {
+                mensaje.textContent = 'El tipo de dispositivo es obligatorio.';
+                mensaje.className = 'modal-mensaje error';
+                document.getElementById('repTipo').focus();
+                return;
+            }
+            if (marca === "") {
+                mensaje.textContent = 'La marca es obligatoria.';
+                mensaje.className = 'modal-mensaje error';
+                return;
+            }
+            if (modelo === "") {
+                mensaje.textContent = 'El modelo es obligatorio.';
+                mensaje.className = 'modal-mensaje error';
+                return;
+            }
+            if (descripcion.length < 15) {
+                mensaje.textContent = 'La descripción debe tener al menos 15 caracteres.';
                 mensaje.className = 'modal-mensaje error';
                 return;
             }
@@ -731,18 +752,32 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         usuario_id: usuarioCliente.id,
-                        equipo,
+                        tipo: tipoInput,
+                        marca,
+                        modelo,
                         descripcion
                     })
                 });
                 const data = await res.json();
 
                 if (res.ok) {
-                    mensaje.textContent = `✓ ${data.mensaje || 'Solicitud enviada'} (ID #${data.id})`;
+                    mensaje.textContent = `✓ Solicitud enviada (ID #${data.id})`;
                     mensaje.className = 'modal-mensaje ok';
                     form.reset();
-                    // Refrescar la lista para que aparezca la nueva reparación
+                    // Actualizamos la tabla y resaltamos la nueva fila
                     await cargarTodo();
+                    try {
+                        const nuevaId = data.id;
+                        const tds = Array.from(document.querySelectorAll('.tabla tbody tr td.id'));
+                        const td = tds.find(x => x.textContent.trim() === `#${nuevaId}`);
+                        if (td) {
+                            const tr = td.closest('tr');
+                            tr.style.transition = 'background 0.4s';
+                            tr.style.background = '#fffbdd';
+                            setTimeout(() => tr.style.background = '', 3000);
+                        }
+                    } catch (e) { /* ignore DOM errors */ }
+
                     setTimeout(() => cerrarModalReparacion(), 1200);
                 } else {
                     mensaje.textContent = data.error || `Error ${res.status}`;
@@ -759,7 +794,26 @@
         });
 
         // Inicial
-        cargarTodo();
+        cargarTodo().then(() => {
+            const nuevaId = sessionStorage.getItem('nuevaReparacionId');
+            if (nuevaId) {
+                // Re-cargar y resaltar la nueva reparación (si existe)
+                setTimeout(async () => {
+                    await cargarTodo();
+                    sessionStorage.removeItem('nuevaReparacionId');
+                    try {
+                        const tds = Array.from(document.querySelectorAll('.tabla tbody tr td.id'));
+                        const td = tds.find(x => x.textContent.trim() === `#${nuevaId}`);
+                        if (td) {
+                            const tr = td.closest('tr');
+                            tr.style.transition = 'background 0.4s';
+                            tr.style.background = '#fffbdd';
+                            setTimeout(() => tr.style.background = '', 3000);
+                        }
+                    } catch (e) { /* ignore DOM errors */ }
+                }, 300);
+            }
+        });
     </script>
 </body>
 

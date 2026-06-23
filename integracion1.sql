@@ -68,8 +68,25 @@ CREATE TABLE `reparaciones` (
   `modelo` varchar(50) NOT NULL,
   `fecha_problema` date NOT NULL,
   `descripcion` text NOT NULL,
-  `estado` varchar(20) DEFAULT 'pendiente',
+  `estado` enum('pendiente','en_diagnostico','en_reparacion','finalizado','entregado') NOT NULL DEFAULT 'pendiente',
+  `total` decimal(10,2) DEFAULT NULL,
   `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `reparacion_historial`
+--
+
+CREATE TABLE `reparacion_historial` (
+  `id` int(11) NOT NULL,
+  `reparacion_id` int(11) NOT NULL,
+  `estado_anterior` varchar(50) DEFAULT NULL,
+  `estado_nuevo` varchar(50) NOT NULL,
+  `usuario_id` int(11) DEFAULT NULL,
+  `notas` text,
+  `creado_en` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -120,6 +137,14 @@ ALTER TABLE `reparaciones`
   ADD KEY `fk_usuario_reparacion` (`usuario_id`);
 
 --
+-- Indices de la tabla `reparacion_historial`
+--
+ALTER TABLE `reparacion_historial`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `reparacion_id` (`reparacion_id`),
+  ADD KEY `usuario_id` (`usuario_id`);
+
+--
 -- Indices de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
@@ -149,6 +174,12 @@ ALTER TABLE `reparaciones`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `reparacion_historial`
+--
+ALTER TABLE `reparacion_historial`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
@@ -170,6 +201,14 @@ ALTER TABLE `pedidos`
 --
 ALTER TABLE `reparaciones`
   ADD CONSTRAINT `fk_usuario_reparacion` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `reparacion_historial`
+--
+ALTER TABLE `reparacion_historial`
+  ADD CONSTRAINT `fk_historial_reparacion` FOREIGN KEY (`reparacion_id`) REFERENCES `reparaciones` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_historial_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
