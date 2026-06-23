@@ -304,20 +304,23 @@
                 <div class="modal-cuerpo">
                     <div class="campo">
                         <label for="repTipo">Tipo de dispositivo *</label>
-                        <select id="repTipo" onchange="actualizarPlaceholder()">
+                        <select id="repTipo">
                             <option value="">Seleccione el tipo...</option>
                             <option value="Computador">Computador</option>
                             <option value="Telefono">Teléfono móvil</option>
                         </select>
                     </div>
+
                     <div class="campo">
                         <label for="repMarca">Marca *</label>
-                        <input type="text" id="repMarca" placeholder="Ej: Samsung, Apple, Lenovo, HP...">
+                        <input type="text" id="repMarca" placeholder="Ej: Samsung, Apple, Lenovo...">
                     </div>
+
                     <div class="campo">
                         <label for="repModelo">Modelo *</label>
                         <input type="text" id="repModelo" placeholder="Seleccione el tipo primero...">
                     </div>
+
                     <div class="campo">
                         <label for="repDescripcion">Descripción del problema *</label>
                         <textarea id="repDescripcion" placeholder="Cuéntanos qué le pasa al dispositivo..."></textarea>
