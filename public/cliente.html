@@ -390,80 +390,75 @@
 
         // ====== Submit del formulario (VALIDACIÓN REFORZADA) ======
         form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        e.preventDefault();
 
-            // Captura directa de los valores
-            const selectTipo = document.getElementById('repTipo');
-            const tipo = selectTipo.value; // Esto tomará "" si es el primer option
-            const marca = document.getElementById('repMarca').value.trim();
-            const modelo = document.getElementById('repModelo').value.trim();
-            const descripcion = document.getElementById('repDescripcion').value.trim();
+        // 1. Obtener valores directamente
+        const tipoInput = document.getElementById('repTipo').value.trim();
+        const marca = document.getElementById('repMarca').value.trim();
+        const modelo = document.getElementById('repModelo').value.trim();
+        const descripcion = document.getElementById('repDescripcion').value.trim();
 
-            // DEBUG: Míralo en la consola (F12 -> Pestaña Consola)
-            console.log("Valores capturados:", { tipo, marca, modelo, descripcion });
+        // 2. Validación
+        if (tipoInput === "") {
+            mensaje.textContent = 'El tipo de dispositivo es obligatorio.';
+            mensaje.className = 'modal-mensaje error';
+            document.getElementById('repTipo').focus();
+            return;
+        }
+        if (marca === "") {
+            mensaje.textContent = 'La marca es obligatoria.';
+            mensaje.className = 'modal-mensaje error';
+            return;
+        }
+        if (modelo === "") {
+            mensaje.textContent = 'El modelo es obligatorio.';
+            mensaje.className = 'modal-mensaje error';
+            return;
+        }
+        if (descripcion.length < 5) {
+            mensaje.textContent = 'La descripción es muy corta.';
+            mensaje.className = 'modal-mensaje error';
+            return;
+        }
 
-            // Validación: Si tipo es vacío, entra al error
-            if (tipo === "") {
-                mensaje.textContent = 'Por favor, selecciona un tipo de dispositivo.';
-                mensaje.className = 'modal-mensaje error';
-                selectTipo.focus();
-                return;
+        // 3. Envío
+        btnEnviar.disabled = true;
+        const textoOriginal = btnEnviar.innerHTML;
+        btnEnviar.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Enviando...`;
+        
+        try {
+            const res = await fetch('/api/reparaciones', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    usuario_id: usuarioCliente.id,
+                    tipo: tipoInput, // Usamos la variable que definimos arriba
+                    marca,
+                    modelo,
+                    descripcion
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                mensaje.textContent = `✓ Solicitud enviada (ID #${data.id})`;
+                mensaje.className = 'modal-mensaje ok';
+                form.reset();
+                setTimeout(() => {
+                    cerrarModalReparacion();
+                    window.location.href = 'pedidosCliente.html';
+                }, 1200);
+            } else {
+                throw new Error(data.error || 'Error al enviar');
             }
-            if (!marca) {
-                mensaje.textContent = 'La marca es obligatoria.';
-                mensaje.className = 'modal-mensaje error';
-                return;
-            }
-            if (!modelo) {
-                mensaje.textContent = 'El modelo es obligatorio.';
-                mensaje.className = 'modal-mensaje error';
-                return;
-            }
-            if (!descripcion || descripcion.length < 5) {
-                mensaje.textContent = 'La descripción es muy corta o está vacía.';
-                mensaje.className = 'modal-mensaje error';
-                return;
-            }
-
-            // Si pasa la validación, enviamos
-            btnEnviar.disabled = true;
-            const textoOriginal = btnEnviar.innerHTML;
-            btnEnviar.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Enviando...`;
-            mensaje.textContent = '';
-
-            try {
-                const res = await fetch('/api/reparaciones', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        usuario_id: usuarioCliente.id,
-                        tipo,
-                        marca,
-                        modelo,
-                        descripcion
-                    })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    mensaje.textContent = `✓ Solicitud enviada (ID #${data.id})`;
-                    mensaje.className = 'modal-mensaje ok';
-                    form.reset();
-                    setTimeout(() => {
-                        cerrarModalReparacion();
-                        window.location.href = 'pedidosCliente.html';
-                    }, 1200);
-                } else {
-                    throw new Error(data.error || 'Error al enviar');
-                }
-            } catch (err) {
-                mensaje.textContent = err.message || 'Error de conexión.';
-                mensaje.className = 'modal-mensaje error';
-                btnEnviar.disabled = false;
-                btnEnviar.innerHTML = textoOriginal;
-            }
-        });
+        } catch (err) {
+            mensaje.textContent = err.message || 'Error de conexión.';
+            mensaje.className = 'modal-mensaje error';
+            btnEnviar.disabled = false;
+            btnEnviar.innerHTML = textoOriginal;
+        }
+    });
     </script>
 </body>
 </html>
