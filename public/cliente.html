@@ -417,17 +417,35 @@ function actualizarPlaceholder() {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            // 1. Capturamos los valores
             const tipo = document.getElementById('repTipo').value;
             const marca = document.getElementById('repMarca').value.trim();
             const modelo = document.getElementById('repModelo').value.trim();
             const descripcion = document.getElementById('repDescripcion').value.trim();
 
-            if (!tipo || !marca || !modelo || !descripcion) {
-                mensaje.textContent = 'Por favor, completa todos los campos.';
+            // 2. Validación estricta
+            if (tipo === "" || tipo === null) {
+                mensaje.textContent = 'El dispositivo es obligatorio.';
+                mensaje.className = 'modal-mensaje error';
+                return;
+            }
+            if (!marca) {
+                mensaje.textContent = 'La marca es obligatoria.';
+                mensaje.className = 'modal-mensaje error';
+                return;
+            }
+            if (!modelo) {
+                mensaje.textContent = 'El modelo es obligatorio.';
+                mensaje.className = 'modal-mensaje error';
+                return;
+            }
+            if (!descripcion || descripcion.length < 5) {
+                mensaje.textContent = 'La descripción es muy corta o está vacía.';
                 mensaje.className = 'modal-mensaje error';
                 return;
             }
 
+            // 3. Si pasa las validaciones, enviamos
             btnEnviar.disabled = true;
             const textoOriginal = btnEnviar.innerHTML;
             btnEnviar.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Enviando...`;
