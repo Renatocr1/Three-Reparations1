@@ -79,6 +79,19 @@ const Reparacion = {
     return filas;
   },
 
+  async obtenerPorId(id) {
+    const [filas] = await pool.query(`
+      SELECT
+        r.id, r.equipo, r.descripcion, r.estado, r.total, r.fecha_registro AS creado_en,
+        r.marca, r.modelo, r.fecha_problema, r.usuario_id,
+        u.nombre AS cliente_nombre, u.correo AS cliente_correo
+      FROM reparaciones r
+      INNER JOIN usuarios u ON r.usuario_id = u.id
+      WHERE r.id = ?
+    `, [id]);
+    return filas.length > 0 ? filas[0] : null;
+  },
+
   async eliminar(id) {
     const [resultado] = await pool.query(
       'DELETE FROM reparaciones WHERE id = ?',

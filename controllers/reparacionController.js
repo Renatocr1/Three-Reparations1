@@ -117,6 +117,23 @@ const reparacionController = {
     }
   },
 
+  async obtener(req, res) {
+    try {
+      const reparacionId = parseInt(req.params.id, 10);
+      if (isNaN(reparacionId)) {
+        return res.status(400).json({ error: 'ID de reparación inválido' });
+      }
+      const reparacion = await Reparacion.obtenerPorId(reparacionId);
+      if (!reparacion) {
+        return res.status(404).json({ error: 'Reparación no encontrada' });
+      }
+      return res.json(reparacion);
+    } catch (error) {
+      console.error('Error al obtener reparación:', error);
+      return res.status(500).json({ error: 'Error al obtener reparación' });
+    }
+  },
+
   async eliminar(req, res) {
     try {
       const eliminado = await Reparacion.eliminar(req.params.id);

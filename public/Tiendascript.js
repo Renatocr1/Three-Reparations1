@@ -233,16 +233,12 @@ async function cargarReparaciones() {
                 <td>${r.equipo}</td>
                 <td>${r.descripcion}</td>
                 <td>
-                    <select class="estado-select" onchange="cambiarEstadoReparacion(${r.id}, this.value)">
-                        <option value="pendiente" ${r.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
-                        <option value="en_diagnostico" ${r.estado === 'en_diagnostico' ? 'selected' : ''}>En diagnóstico</option>
-                        <option value="en_reparacion" ${r.estado === 'en_reparacion' ? 'selected' : ''}>En reparación</option>
-                        <option value="finalizado" ${r.estado === 'finalizado' ? 'selected' : ''}>Finalizado</option>
-                        <option value="entregado" ${r.estado === 'entregado' ? 'selected' : ''}>Entregado</option>
-                    </select>
+                    <span style="display: inline-block; padding: 4px 8px; border-radius: 4px; background: ${r.estado === 'pendiente' ? '#fef3c7' : r.estado === 'en_diagnostico' ? '#dbeafe' : r.estado === 'en_reparacion' ? '#d1fae5' : r.estado === 'finalizado' ? '#d1fae5' : '#fee2e2'}; color: ${r.estado === 'pendiente' ? '#b45309' : r.estado === 'en_diagnostico' ? '#1d4ed8' : r.estado === 'en_reparacion' ? '#047857' : r.estado === 'finalizado' ? '#047857' : '#b91c1c'}; font-weight: 500; font-size: 12px;">
+                        ${r.estado === 'pendiente' ? 'Pendiente' : r.estado === 'en_diagnostico' ? 'En diagnóstico' : r.estado === 'en_reparacion' ? 'En reparación' : r.estado === 'finalizado' ? 'Finalizado' : r.estado === 'entregado' ? 'Entregado' : r.estado}
+                    </span>
                 </td>
                 <td>
-                    <button class="btn-icon info" onclick="verHistorialReparacion(${r.id})" title="Ver historial"><i class='bx bx-history'></i></button>
+                    <button class="btn-icon info" onclick="abrirDetallesReparacion(${r.id})" title="Ver detalles"><i class='bx bx-expand'></i></button>
                     <button class="btn-icon danger" onclick="eliminarReparacion(${r.id})" title="Eliminar"><i class='bx bx-trash'></i></button>
                 </td>
             `;
@@ -339,5 +335,138 @@ async function verHistorialReparacion(id) {
     } catch (error) {
         console.error('Error al obtener historial:', error);
         alert('Error al cargar el historial de cambios');
+    }
+}
+
+// ============= MODAL DE DETALLES DE REPARACIÓN =================
+let REPARACION_ACTUAL = null;
+
+async function abrirDetallesReparacion(id) {
+    try {
+        // Obtener detalles de la reparación
+        const respuesta = await fetch(`/api/reparaciones/${id}`);
+        if (!respuesta.ok) throw new Error('No se pudo cargar la reparación');
+        
+        const reparacion = await respuesta.json();
+        REPARACION_ACTUAL = reparacion;
+
+        // Llenar los campos del modal
+        document.getElementById('det-rep-id').textContent = '#' + id;
+        document.getElementById('det-cliente-nombre').textContent = reparacion.cliente_nombre || '—';
+        document.getElementById('det-cliente-correo').textContent = reparacion.cliente_correo || '—';
+        document.getElementById('det-tipo').textContent = reparacion.tipo || '—';
+        document.getElementById('det-marca').textContent = reparacion.marca || '—';
+        document.getElementById('det-modelo').textContent = reparacion.modelo || '—';
+        document.getElementById('det-descripcion').textContent = reparacion.descripcion || '—';
+        document.getElementById('det-estado-select').value = reparacion.estado;
+        
+        // Limpiar mensaje anterior
+        document.getElementById('det-msg').textContent = '';
+        document.getElementById('det-msg').className = 'edit-msg';
+
+        // Cargar historial
+        await cargarHistorialEnModal(id);
+
+        // Abrir modal
+        document.getElementById('modal-detalles-reparacion').classList.add('activo');
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al cargar los detalles de la reparación');
+    }
+}
+
+function cerrarModalDetallesReparacion() {
+    document.getElementById('modal-detalles-reparacion').classList.remove('activo');
+    REPARACION_ACTUAL = null;
+}
+
+async function cargarHistorialEnModal(repId) {
+    try {
+        const respuesta = await fetch(`/api/reparaciones/${repId}/historial`);
+        const historial = await respuesta.json();
+        
+        const contenedor = document.getElementById('det-historial-container');
+        
+        if (!historial || historial.length === 0) {
+            contenedor.innerHTML = '<p style="color:#999; text-align: center; padding: 20px 0;">No hay cambios de estado registrados.</p>';
+            return;
+        }
+
+        let html = '<table style="width: 100%; border-collapse: collapse; font-size: 12px;">';
+        html += '<tr style="background: #f5f5f5; border-bottom: 1px solid #ddd;">';
+        html += '<th style="padding: 8px; text-align: left; font-weight: 600;">Fecha y Hora</th>';
+        html += '<th style="padding: 8px; text-align: left; font-weight: 600;">Cambio</th>';
+        html += '<th style="padding: 8px; text-align: left; font-weight: 600;">Quién lo hizo</th>';
+        html += '</tr>';
+        
+        historial.forEach(h => {
+            const fecha = new Date(h.creado_en).toLocaleString('es-ES');
+            const cambio = (h.estado_anterior || 'inicio') + ' → ' + h.estado_nuevo;
+            const usuario = h.usuario_nombre || 'Sistema';
+            
+            html += '<tr style="border-bottom: 1px solid #f0f0f0;">';
+            html += `<td style="padding: 8px;">${fecha}</td>`;
+            html += `<td style="padding: 8px;"><strong>${cambio}</strong></td>`;
+            html += `<td style="padding: 8px;">${usuario}</td>`;
+            html += '</tr>';
+        });
+        
+        html += '</table>';
+        contenedor.innerHTML = html;
+    } catch (error) {
+        console.error('Error al cargar historial:', error);
+        document.getElementById('det-historial-container').innerHTML = 
+            '<p style="color: #dc2626; text-align: center; padding: 20px 0;">Error al cargar el historial</p>';
+    }
+}
+
+async function actualizarEstadoDesdeDetalles() {
+    if (!REPARACION_ACTUAL) return;
+
+    const nuevoEstado = document.getElementById('det-estado-select').value;
+    const btnAplicar = event.target;
+    const msgDiv = document.getElementById('det-msg');
+
+    btnAplicar.disabled = true;
+    btnAplicar.textContent = 'Procesando...';
+    msgDiv.textContent = '';
+    msgDiv.className = 'edit-msg';
+
+    try {
+        const respuesta = await fetch(`/api/reparaciones/${REPARACION_ACTUAL.id}/estado`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                estado: nuevoEstado,
+                usuario_id: usuarioAdmin.id
+            })
+        });
+
+        if (respuesta.ok) {
+            msgDiv.textContent = '✓ Estado actualizado correctamente';
+            msgDiv.className = 'edit-msg ok';
+            REPARACION_ACTUAL.estado = nuevoEstado;
+            
+            // Recargar historial después de 1 segundo
+            setTimeout(() => {
+                cargarHistorialEnModal(REPARACION_ACTUAL.id);
+            }, 1000);
+            
+            // Recargar tabla después de 2 segundos
+            setTimeout(() => {
+                cargarReparaciones();
+            }, 2000);
+        } else {
+            const error = await respuesta.json().catch(() => ({}));
+            msgDiv.textContent = '✗ ' + (error.error || 'Error al actualizar');
+            msgDiv.className = 'edit-msg error';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        msgDiv.textContent = '✗ Error de conexión';
+        msgDiv.className = 'edit-msg error';
+    } finally {
+        btnAplicar.disabled = false;
+        btnAplicar.textContent = 'Aplicar cambio';
     }
 }

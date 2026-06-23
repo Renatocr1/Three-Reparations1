@@ -358,6 +358,65 @@
       </div>
     </div>
 
+    <!-- Modal detalles de reparación -->
+    <div class="modal-edit-overlay" id="modal-detalles-reparacion">
+      <div class="modal-edit-window" style="max-width: 600px;">
+        <div class="modal-edit-head">
+          <h3>Detalles de Reparación <span id="det-rep-id"></span></h3>
+          <button type="button" class="modal-edit-close" onclick="cerrarModalDetallesReparacion()">×</button>
+        </div>
+        <div class="modal-edit-body" style="max-height: 70vh; overflow-y: auto;">
+          
+          <!-- Información del cliente -->
+          <div style="margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #e5e5e5;">
+            <h4 style="margin: 0 0 10px; font-size: 14px; font-weight: 600; color: #333;">Cliente</h4>
+            <p style="margin: 6px 0; font-size: 14px;"><strong id="det-cliente-nombre">—</strong></p>
+            <p style="margin: 6px 0; font-size: 13px; color: #666;" id="det-cliente-correo">—</p>
+          </div>
+
+          <!-- Información del dispositivo -->
+          <div style="margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #e5e5e5;">
+            <h4 style="margin: 0 0 10px; font-size: 14px; font-weight: 600; color: #333;">Dispositivo</h4>
+            <p style="margin: 6px 0; font-size: 14px;"><strong>Tipo:</strong> <span id="det-tipo">—</span></p>
+            <p style="margin: 6px 0; font-size: 14px;"><strong>Marca:</strong> <span id="det-marca">—</span></p>
+            <p style="margin: 6px 0; font-size: 14px;"><strong>Modelo:</strong> <span id="det-modelo">—</span></p>
+          </div>
+
+          <!-- Descripción del problema -->
+          <div style="margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #e5e5e5;">
+            <h4 style="margin: 0 0 10px; font-size: 14px; font-weight: 600; color: #333;">Descripción del Problema</h4>
+            <p style="margin: 6px 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap;" id="det-descripcion">—</p>
+          </div>
+
+          <!-- Cambiar estado -->
+          <div style="margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #e5e5e5;">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px;">Cambiar Estado</label>
+            <select id="det-estado-select" style="width: 100%; padding: 9px 12px; border: 1.5px solid #e0e0e0; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+              <option value="pendiente">Pendiente</option>
+              <option value="en_diagnostico">En diagnóstico</option>
+              <option value="en_reparacion">En reparación</option>
+              <option value="finalizado">Finalizado</option>
+              <option value="entregado">Entregado</option>
+            </select>
+            <button type="button" onclick="actualizarEstadoDesdeDetalles()" style="width: 100%; margin-top: 10px; padding: 9px 12px; background: #059669; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;">Aplicar cambio</button>
+            <p class="edit-msg" id="det-msg" style="margin: 12px 0 0; font-size: 12px;"></p>
+          </div>
+
+          <!-- Historial de cambios -->
+          <div>
+            <h4 style="margin: 0 0 10px; font-size: 14px; font-weight: 600; color: #333;">Historial de Cambios</h4>
+            <div id="det-historial-container" style="font-size: 13px; max-height: 300px; overflow-y: auto;">
+              <p style="color: #999; text-align: center; padding: 20px 0;">Cargando historial...</p>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-edit-foot">
+          <button type="button" class="btn-pedido" onclick="cerrarModalDetallesReparacion()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <script>

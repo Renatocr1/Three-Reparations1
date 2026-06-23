@@ -5,6 +5,7 @@ const reparacionController = require('../controllers/reparacionController');
 router.get('/reparaciones', reparacionController.listar);
 router.get('/reparaciones/usuario/:id', reparacionController.listarPorUsuario);
 router.get('/reparaciones/:id/historial', reparacionController.obtenerHistorial);
+router.get('/reparaciones/:id', reparacionController.obtener);
 router.post('/reparaciones', reparacionController.crear);
 router.put('/reparaciones/:id/estado', reparacionController.cambiarEstado);
 router.delete('/reparaciones/:id', reparacionController.eliminar);
