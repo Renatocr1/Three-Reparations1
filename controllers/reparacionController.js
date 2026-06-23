@@ -36,23 +36,35 @@ const reparacionController = {
 
   async crear(req, res) {
     try {
-      const { usuario_id, equipo, descripcion } = req.body || {};
+      // 1. Recibimos los nuevos campos que envía el frontend
+      const { usuario_id, tipo, marca, modelo, descripcion } = req.body || {};
 
-      // Validación clara y sin precedencia rara de operadores
+      // 2. Validación de usuario
       const idNum = parseInt(usuario_id, 10);
       if (!usuario_id || isNaN(idNum)) {
         return res.status(400).json({ error: 'usuario_id es obligatorio' });
       }
-      if (typeof equipo !== 'string' || equipo.trim() === '') {
-        return res.status(400).json({ error: 'El dispositivo es obligatorio' });
+
+      // 3. Validación de campos (Ahora validamos tipo, marca y modelo)
+      if (!tipo || tipo.trim() === '') {
+        return res.status(400).json({ error: 'El tipo de dispositivo es obligatorio' });
       }
-      if (typeof descripcion !== 'string' || descripcion.trim() === '') {
-        return res.status(400).json({ error: 'La causa de reparación es obligatoria' });
+      if (!marca || marca.trim() === '') {
+        return res.status(400).json({ error: 'La marca es obligatoria' });
       }
+      if (!modelo || modelo.trim() === '') {
+        return res.status(400).json({ error: 'El modelo es obligatorio' });
+      }
+      if (!descripcion || descripcion.trim() === '' || descripcion.length < 5) {
+        return res.status(400).json({ error: 'La descripción es obligatoria y debe ser mayor a 5 caracteres' });
+      }
+
+      // 4. Combinamos todo en la variable 'equipo' que tu modelo espera
+      const equipoConcatenado = `${tipo} - ${marca} ${modelo}`;
 
       const nuevoId = await Reparacion.crear({
         usuario_id: idNum,
-        equipo: equipo.trim(),
+        equipo: equipoConcatenado, // Enviamos el equipo unido
         descripcion: descripcion.trim()
       });
 
