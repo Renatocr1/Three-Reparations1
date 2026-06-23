@@ -310,20 +310,17 @@
                             <option value="Telefono">Teléfono móvil</option>
                         </select>
                     </div>
-
                     <div class="campo">
                         <label for="repMarca">Marca *</label>
-                        <input type="text" id="repMarca" placeholder="Ej: Samsung, Apple, Lenovo...">
+                        <input type="text" id="repMarca" placeholder="Ej: Samsung, Apple...">
                     </div>
-
                     <div class="campo">
                         <label for="repModelo">Modelo *</label>
-                        <input type="text" id="repModelo" placeholder="Seleccione el tipo primero...">
+                        <input type="text" id="repModelo" placeholder="Ej: iPhone 15, MacBook...">
                     </div>
-
                     <div class="campo">
                         <label for="repDescripcion">Descripción del problema *</label>
-                        <textarea id="repDescripcion" placeholder="Cuéntanos qué le pasa al dispositivo..."></textarea>
+                        <textarea id="repDescripcion" placeholder="Cuéntanos qué le pasa..."></textarea>
                     </div>
                 </div>
 
@@ -332,8 +329,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn-modal secundario" onclick="cerrarModalReparacion()">Cancelar</button>
                     <button type="submit" class="btn-modal primario" id="btnEnviarReparacion">
-                        <i class='bx bx-send'></i>
-                        Enviar solicitud
+                        <i class='bx bx-send'></i> Enviar solicitud
                     </button>
                 </div>
             </form>
@@ -420,16 +416,21 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // 1. Capturamos los valores
-            const tipo = document.getElementById('repTipo').value;
+            // Captura de valores (esto se ejecuta al momento de hacer click en Enviar)
+            const elTipo = document.getElementById('repTipo');
+            const tipo = elTipo ? elTipo.value : "";
             const marca = document.getElementById('repMarca').value.trim();
             const modelo = document.getElementById('repModelo').value.trim();
             const descripcion = document.getElementById('repDescripcion').value.trim();
 
-            // 2. Validación estricta
-            if (tipo === "" || tipo === null) {
+            // DEBUG: Abre la consola (F12) para ver qué está leyendo realmente
+            console.log("Valores detectados:", { tipo, marca, modelo, descripcion });
+
+            // Validación unificada y estricta
+            if (tipo === "" || tipo === "Seleccione el tipo...") {
                 mensaje.textContent = 'El dispositivo es obligatorio.';
                 mensaje.className = 'modal-mensaje error';
+                elTipo.focus();
                 return;
             }
             if (!marca) {
@@ -448,7 +449,7 @@
                 return;
             }
 
-            // 3. Si pasa las validaciones, enviamos
+            // Proceso de envío
             btnEnviar.disabled = true;
             const textoOriginal = btnEnviar.innerHTML;
             btnEnviar.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Enviando...`;
@@ -460,10 +461,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         usuario_id: usuarioCliente.id,
-                        tipo,
-                        marca,
-                        modelo,
-                        descripcion
+                        tipo: tipo,
+                        marca: marca,
+                        modelo: modelo,
+                        descripcion: descripcion
                     })
                 });
 
