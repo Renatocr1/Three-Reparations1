@@ -16,7 +16,7 @@ loginBtn.addEventListener('click', () => {
 });
 
 // ============================================
-// 2. REGISTRO de usuario (MODIFICADO)
+// 2. REGISTRO de usuario 
 // ============================================
 const formRegistro = document.getElementById('formRegistro');
 const mensajeRegistro = document.getElementById('mensajeRegistro');
