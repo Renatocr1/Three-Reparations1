@@ -342,14 +342,13 @@
     </footer>
 
     <script>
-        // ====== Datos del usuario en la página ======
+        // ====== Datos del usuario ======
         const nombre = usuarioCliente.nombre;
         const inicial = nombre.charAt(0).toUpperCase();
 
         document.getElementById('avatar').textContent = inicial;
         document.getElementById('nombreNavbar').textContent = nombre;
         document.getElementById('bienvenida').textContent = 'Hola, ' + nombre + ' 👋';
-
         document.getElementById('infoNombre').textContent = nombre;
         document.getElementById('infoCorreo').textContent = usuarioCliente.correo;
         document.getElementById('infoRol').textContent = usuarioCliente.rol === 'cliente' ? 'Cliente' : usuarioCliente.rol;
@@ -360,77 +359,58 @@
             window.location.href = 'index.html';
         }
 
-        // ====== Lógica del modal "Solicitar reparación" ======
+        // ====== Lógica del modal ======
         const modal = document.getElementById('modalReparacion');
         const form = document.getElementById('formReparacion');
         const mensaje = document.getElementById('modalMensaje');
         const btnEnviar = document.getElementById('btnEnviarReparacion');
 
-        // Abrir el modal al clickear la tarjeta
         document.getElementById('tarjetaReparacion').addEventListener('click', (e) => {
             e.preventDefault();
             abrirModalReparacion();
         });
 
         function abrirModalReparacion() {
-        mensaje.textContent = '';
-        mensaje.className = 'modal-mensaje';
-        form.reset();
-        modal.classList.add('activo');
-        // Corregido: apuntas a 'repTipo' en lugar de 'repEquipo'
-        setTimeout(() => document.getElementById('repTipo').focus(), 100);
-    }
+            mensaje.textContent = '';
+            mensaje.className = 'modal-mensaje';
+            form.reset();
+            modal.classList.add('activo');
+            setTimeout(() => document.getElementById('repTipo').focus(), 100);
+        }
 
         function cerrarModalReparacion() {
             modal.classList.remove('activo');
         }
 
-        // Cerrar al hacer click fuera de la ventana
         modal.addEventListener('click', (e) => {
             if (e.target === modal) cerrarModalReparacion();
         });
 
-        // Cerrar con tecla Escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && modal.classList.contains('activo')) {
                 cerrarModalReparacion();
             }
         });
 
-        // Submit del formulario
-        // Función para cambiar el placeholder según el tipo de dispositivo
-        function actualizarPlaceholder() {
-            const tipo = document.getElementById('repTipo').value;
-            const inputModelo = document.getElementById('repModelo');
-            
-            if (tipo === 'Computador') {
-                inputModelo.placeholder = 'Ej: MacBook Pro, Pavilion 15, ThinkPad X1...';
-            } else if (tipo === 'Telefono') {
-                inputModelo.placeholder = 'Ej: iPhone 15, Galaxy S23, Pixel 8...';
-            } else {
-                inputModelo.placeholder = 'Seleccione el tipo primero...';
-            }
-        }
-
-        // Actualización del submit para capturar los nuevos campos
+        // ====== Submit del formulario (VALIDACIÓN REFORZADA) ======
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Captura de valores (esto se ejecuta al momento de hacer click en Enviar)
-            const elTipo = document.getElementById('repTipo');
-            const tipo = elTipo ? elTipo.value : "";
+            // Captura directa de los valores
+            const selectTipo = document.getElementById('repTipo');
+            const tipo = selectTipo.value; // Esto tomará "" si es el primer option
             const marca = document.getElementById('repMarca').value.trim();
             const modelo = document.getElementById('repModelo').value.trim();
             const descripcion = document.getElementById('repDescripcion').value.trim();
 
-            // DEBUG: Abre la consola (F12) para ver qué está leyendo realmente
-            console.log("Valores detectados:", { tipo, marca, modelo, descripcion });
+            // DEBUG: Míralo en la consola (F12 -> Pestaña Consola)
+            console.log("Valores capturados:", { tipo, marca, modelo, descripcion });
 
-            // Validación unificada y estricta
-            if (tipo === "" || tipo === "Seleccione el tipo...") {
-                mensaje.textContent = 'El dispositivo es obligatorio.';
+            // Validación: Si tipo es vacío, entra al error
+            if (tipo === "") {
+                mensaje.textContent = 'Por favor, selecciona un tipo de dispositivo.';
                 mensaje.className = 'modal-mensaje error';
-                elTipo.focus();
+                selectTipo.focus();
                 return;
             }
             if (!marca) {
@@ -449,7 +429,7 @@
                 return;
             }
 
-            // Proceso de envío
+            // Si pasa la validación, enviamos
             btnEnviar.disabled = true;
             const textoOriginal = btnEnviar.innerHTML;
             btnEnviar.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Enviando...`;
@@ -461,10 +441,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         usuario_id: usuarioCliente.id,
-                        tipo: tipo,
-                        marca: marca,
-                        modelo: modelo,
-                        descripcion: descripcion
+                        tipo,
+                        marca,
+                        modelo,
+                        descripcion
                     })
                 });
 
@@ -479,13 +459,11 @@
                         window.location.href = 'pedidosCliente.html';
                     }, 1200);
                 } else {
-                    mensaje.textContent = data.error || 'Error al enviar.';
-                    mensaje.className = 'modal-mensaje error';
+                    throw new Error(data.error || 'Error al enviar');
                 }
             } catch (err) {
-                mensaje.textContent = 'Error de conexión.';
+                mensaje.textContent = err.message || 'Error de conexión.';
                 mensaje.className = 'modal-mensaje error';
-            } finally {
                 btnEnviar.disabled = false;
                 btnEnviar.innerHTML = textoOriginal;
             }
