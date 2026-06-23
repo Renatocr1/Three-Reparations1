@@ -303,23 +303,33 @@
             <form id="formReparacion" novalidate>
                 <div class="modal-cuerpo">
                     <div class="campo">
-                        <label for="repEquipo">Dispositivo *</label>
-                        <input type="text" id="repEquipo" maxlength="150"
-                               placeholder="Ej: iPhone 13, Notebook HP Pavilion...">
+                        <label for="repTipo">Tipo de dispositivo *</label>
+                        <select id="repTipo">
+                            <option value="">Seleccione el tipo...</option>
+                            <option value="Computador">Computador</option>
+                            <option value="Telefono">Teléfono móvil</option>
+                            <option value="Tablet">Tablet</option>
+                            <option value="Otro">Otro</option>
+                        </select>
                     </div>
-
                     <div class="campo">
-                        <label for="repDescripcion">Causa de reparación *</label>
-                        <textarea id="repDescripcion"
-                                  placeholder="Cuéntanos qué le pasa al dispositivo (no enciende, pantalla rota, etc.)"></textarea>
+                        <label for="repMarca">Marca *</label>
+                        <input type="text" id="repMarca" placeholder="Ej: Samsung, Apple, Lenovo, HP...">
+                    </div>
+                    <div class="campo">
+                        <label for="repModelo">Modelo *</label>
+                        <input type="text" id="repModelo" placeholder="Ej: Galaxy S23, MacBook Air, iPad Pro...">
+                    </div>
+                    <div class="campo">
+                        <label for="repDescripcion">Descripción del problema *</label>
+                        <textarea id="repDescripcion" placeholder="Describe los síntomas (mínimo 20 caracteres)..."></textarea>
                     </div>
                 </div>
 
                 <div class="modal-mensaje" id="modalMensaje"></div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn-modal secundario"
-                            onclick="cerrarModalReparacion()">Cancelar</button>
+                    <button type="button" class="btn-modal secundario" onclick="cerrarModalReparacion()">Cancelar</button>
                     <button type="submit" class="btn-modal primario" id="btnEnviarReparacion">
                         <i class='bx bx-send'></i>
                         Enviar solicitud
@@ -394,11 +404,21 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const equipo = document.getElementById('repEquipo').value.trim();
+            const tipo = document.getElementById('repTipo').value;
+            const marca = document.getElementById('repMarca').value.trim();
+            const modelo = document.getElementById('repModelo').value.trim();
             const descripcion = document.getElementById('repDescripcion').value.trim();
 
-            if (!equipo || !descripcion) {
-                mensaje.textContent = 'Completa todos los campos.';
+            // Validación de campos vacíos
+            if (!tipo || !marca || !modelo || !descripcion) {
+                mensaje.textContent = 'Por favor, completa todos los campos.';
+                mensaje.className = 'modal-mensaje error';
+                return;
+            }
+
+            // Validación de longitud mínima (evitar descripciones vacías o sin contexto)
+            if (descripcion.length < 20) {
+                mensaje.textContent = 'La descripción es muy corta. Por favor, detalla mejor el problema.';
                 mensaje.className = 'modal-mensaje error';
                 return;
             }
@@ -416,7 +436,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         usuario_id: usuarioCliente.id,
-                        equipo,
+                        tipo,
+                        marca,
+                        modelo,
                         descripcion
                     })
                 });
@@ -424,11 +446,10 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    mensaje.textContent = `✓ ${data.mensaje || 'Solicitud enviada'} (ID #${data.id})`;
+                    mensaje.textContent = `✓ Solicitud enviada (ID #${data.id})`;
                     mensaje.className = 'modal-mensaje ok';
                     form.reset();
 
-                    // Llevamos al cliente a "Mis pedidos" para que vea su reparación recién creada
                     setTimeout(() => {
                         cerrarModalReparacion();
                         window.location.href = 'pedidosCliente.html';
