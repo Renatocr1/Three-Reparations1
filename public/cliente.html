@@ -400,18 +400,18 @@
 
         // Submit del formulario
         // Función para cambiar el placeholder según el tipo de dispositivo
-function actualizarPlaceholder() {
-    const tipo = document.getElementById('repTipo').value;
-    const inputModelo = document.getElementById('repModelo');
-    
-    if (tipo === 'Computador') {
-        inputModelo.placeholder = 'Ej: MacBook Pro, Pavilion 15, ThinkPad X1...';
-    } else if (tipo === 'Telefono') {
-        inputModelo.placeholder = 'Ej: iPhone 15, Galaxy S23, Pixel 8...';
-    } else {
-        inputModelo.placeholder = 'Seleccione el tipo primero...';
-    }
-}
+        function actualizarPlaceholder() {
+            const tipo = document.getElementById('repTipo').value;
+            const inputModelo = document.getElementById('repModelo');
+            
+            if (tipo === 'Computador') {
+                inputModelo.placeholder = 'Ej: MacBook Pro, Pavilion 15, ThinkPad X1...';
+            } else if (tipo === 'Telefono') {
+                inputModelo.placeholder = 'Ej: iPhone 15, Galaxy S23, Pixel 8...';
+            } else {
+                inputModelo.placeholder = 'Seleccione el tipo primero...';
+            }
+        }
 
         // Actualización del submit para capturar los nuevos campos
         form.addEventListener('submit', async (e) => {
