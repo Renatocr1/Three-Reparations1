@@ -3,20 +3,35 @@
 // Archivo: server.js
 // ============================================
 const express = require('express');
+const session = require('express-session');
 const path = require('path');
 const { probarConexion } = require('./db/conexion');
 
-// Rutas
-const usuarioRoutes     = require('./routes/UsuarioRoutes');
+// Rutas (los nombres deben coincidir EXACTO con el archivo: Linux distingue mayúsculas)
+const usuarioRoutes     = require('./routes/usuarioRoutes');
 const reparacionRoutes  = require('./routes/Reparacionroutes');
-const pedidoRoutes      = require('./routes/PedidoRoutes');
+const pedidoRoutes      = require('./routes/pedidoRoutes');
+const productoRoutes    = require('./routes/productoRoutes');
+const servicioRoutes    = require('./routes/servicioRoutes');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Sesión: guarda al usuario tras el login para el control de acceso por rol
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'three-reparations-secret-dev',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 1000 * 60 * 60 * 4 // 4 horas
+  }
+}));
 
 // Archivos estáticos del front (public/) — sin caché para desarrollo
 app.use(express.static(path.join(__dirname, 'public'), {
@@ -36,6 +51,10 @@ app.use('/api', usuarioRoutes);
 app.use('/api', reparacionRoutes);
 // /api/pedidos, /api/pedidos/usuario/:id, ...
 app.use('/api', pedidoRoutes);
+// /api/productos, /api/productos/:id, ...
+app.use('/api', productoRoutes);
+// /api/servicios, /api/servicios/:id, ...
+app.use('/api', servicioRoutes);
 
 // Iniciamos el servidor
 (async () => {

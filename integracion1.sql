@@ -209,6 +209,64 @@ ALTER TABLE `reparacion_historial`
   ADD CONSTRAINT `fk_historial_reparacion` FOREIGN KEY (`reparacion_id`) REFERENCES `reparaciones` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_historial_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
 
+-- --------------------------------------------------------
+--
+-- Estructura de tabla para la tabla `servicios` (catálogo del taller)
+--
+
+CREATE TABLE `servicios` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(150) NOT NULL,
+  `descripcion` text DEFAULT NULL,
+  `categoria` varchar(80) DEFAULT NULL,
+  `precio` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `dias_estimados` int(11) NOT NULL DEFAULT 1,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `creado_en` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `servicios` (`nombre`, `descripcion`, `categoria`, `precio`, `dias_estimados`, `activo`) VALUES
+('Reparación de pantalla', 'Cambio de pantalla o módulo dañado.', 'Teléfono', 50000.00, 2, 1),
+('Reparación de pantalla', 'Cambio de panel para notebook.', 'Computador', 60000.00, 3, 1),
+('Cambio de batería', 'Reemplazo de batería degradada.', 'Teléfono', 80000.00, 1, 1),
+('Cambio de batería', 'Reemplazo de batería de notebook.', 'Computador', 100000.00, 2, 1),
+('Reparación de placa', 'Reparación de placa o circuito dañado.', 'General', 120000.00, 4, 1),
+('Reparación de botones', 'Reparación de botones o teclado.', 'General', 70000.00, 2, 1),
+('Diagnóstico general', 'Revisión técnica y diagnóstico del equipo.', 'General', 15000.00, 1, 1),
+('Formateo e instalación', 'Reinstalación de sistema y programas.', 'Computador', 30000.00, 1, 1);
+
+-- --------------------------------------------------------
+--
+-- Estructura de tabla para la tabla `diagnosticos` (uno por reparación)
+--
+
+CREATE TABLE `diagnosticos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `reparacion_id` int(11) NOT NULL,
+  `hallazgos` text NOT NULL,
+  `recomendaciones` text DEFAULT NULL,
+  `repuestos` text DEFAULT NULL,
+  `usuario_id` int(11) DEFAULT NULL,
+  `creado_en` timestamp NOT NULL DEFAULT current_timestamp(),
+  `actualizado_en` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `reparacion_id` (`reparacion_id`),
+  KEY `usuario_id` (`usuario_id`),
+  CONSTRAINT `fk_diag_reparacion` FOREIGN KEY (`reparacion_id`) REFERENCES `reparaciones` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_diag_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+--
+-- Vinculación de la solicitud de reparación con un servicio del catálogo
+--
+
+ALTER TABLE `reparaciones` ADD COLUMN `servicio_id` int(11) DEFAULT NULL AFTER `usuario_id`;
+ALTER TABLE `reparaciones` ADD KEY `servicio_id` (`servicio_id`);
+ALTER TABLE `reparaciones`
+  ADD CONSTRAINT `fk_reparacion_servicio` FOREIGN KEY (`servicio_id`) REFERENCES `servicios` (`id`) ON DELETE SET NULL;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

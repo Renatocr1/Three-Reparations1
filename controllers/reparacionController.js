@@ -3,6 +3,7 @@
 // Archivo: controllers/reparacionController.js
 // ============================================
 const Reparacion = require('../models/modeloReparacion');
+const Diagnostico = require('../models/modeloDiagnostico');
 
 const ESTADOS_VALIDOS = ['pendiente', 'en_diagnostico', 'en_reparacion', 'finalizado', 'entregado'];
 
@@ -10,7 +11,14 @@ const reparacionController = {
 
   async listar(req, res) {
     try {
-      const reparaciones = await Reparacion.listarTodos();
+      // Filtros del panel admin (estado / rango de fechas / búsqueda por id o cliente)
+      const filtros = {
+        estado: ESTADOS_VALIDOS.includes(req.query.estado) ? req.query.estado : undefined,
+        fechaDesde: req.query.fechaDesde || undefined,
+        fechaHasta: req.query.fechaHasta || undefined,
+        q: req.query.q ? String(req.query.q).trim() : undefined
+      };
+      const reparaciones = await Reparacion.listarTodos(filtros);
       return res.json(reparaciones);
     } catch (error) {
       console.error(error);
@@ -20,10 +28,14 @@ const reparacionController = {
 
   async listarPorUsuario(req, res) {
     try {
-      const idParam = parseInt(req.params.id, 10);
+      let idParam = parseInt(req.params.id, 10);
       if (isNaN(idParam)) {
         console.warn('listarPorUsuario reparaciones: id inválido =', req.params.id);
         return res.status(400).json({ error: 'id de usuario inválido' });
+      }
+      // Un cliente solo puede ver SUS reparaciones (no las de otro usuario).
+      if (req.session && req.session.usuario && req.session.usuario.rol === 'cliente') {
+        idParam = req.session.usuario.id;
       }
       const reparaciones = await Reparacion.listarPorUsuario(idParam);
       console.log(`Reparaciones encontradas para usuario ${idParam}:`, reparaciones.length);
@@ -37,11 +49,14 @@ const reparacionController = {
   async crear(req, res) {
     try {
       // 1. Recibimos los nuevos campos que envía el frontend
-      const { usuario_id, tipo, marca, modelo, descripcion } = req.body || {};
+      const { usuario_id, servicio_id, tipo, marca, modelo, descripcion } = req.body || {};
 
-      // 2. Validación de usuario
-      const idNum = parseInt(usuario_id, 10);
-      if (!usuario_id || isNaN(idNum)) {
+      // 2. El dueño de la solicitud es el usuario de la sesión (más seguro que
+      //    confiar en el id del body). Si no hubiera sesión, usamos el del body.
+      const idNum = (req.session && req.session.usuario)
+        ? req.session.usuario.id
+        : parseInt(usuario_id, 10);
+      if (!idNum || isNaN(idNum)) {
         return res.status(400).json({ error: 'usuario_id es obligatorio' });
       }
 
@@ -67,6 +82,7 @@ const reparacionController = {
 
       const nuevoId = await Reparacion.crear({
         usuario_id: idNum,
+        servicio_id: servicio_id ? parseInt(servicio_id, 10) : null,
         equipo: equipoConcatenado,
         marca: marca.trim(),
         modelo: modelo.trim(),
@@ -161,6 +177,49 @@ const reparacionController = {
     } catch (error) {
       console.error(error);
       return res.status(500).json({ error: 'Error al actualizar la reparación' });
+    }
+  },
+
+  // GET /api/reparaciones/:id/diagnostico  -> devuelve el diagnóstico (o null)
+  async obtenerDiagnostico(req, res) {
+    try {
+      const reparacionId = parseInt(req.params.id, 10);
+      if (isNaN(reparacionId)) {
+        return res.status(400).json({ error: 'ID de reparación inválido' });
+      }
+      const diagnostico = await Diagnostico.obtenerPorReparacion(reparacionId);
+      return res.json(diagnostico); // null si todavía no tiene diagnóstico
+    } catch (error) {
+      console.error('Error al obtener diagnóstico:', error);
+      return res.status(500).json({ error: 'Error al obtener diagnóstico' });
+    }
+  },
+
+  // PUT /api/reparaciones/:id/diagnostico  -> crea o actualiza el diagnóstico (solo admin)
+  async guardarDiagnostico(req, res) {
+    try {
+      const reparacionId = parseInt(req.params.id, 10);
+      if (isNaN(reparacionId)) {
+        return res.status(400).json({ error: 'ID de reparación inválido' });
+      }
+      const { hallazgos, recomendaciones, repuestos } = req.body || {};
+      if (!hallazgos || hallazgos.trim().length < 5) {
+        return res.status(400).json({ error: 'Los hallazgos son obligatorios (mínimo 5 caracteres)' });
+      }
+      const reparacion = await Reparacion.obtenerPorId(reparacionId);
+      if (!reparacion) return res.status(404).json({ error: 'Reparación no encontrada' });
+
+      const usuarioId = (req.session && req.session.usuario) ? req.session.usuario.id : null;
+      await Diagnostico.guardar(reparacionId, {
+        hallazgos: hallazgos.trim(),
+        recomendaciones: recomendaciones ? recomendaciones.trim() : null,
+        repuestos: repuestos ? repuestos.trim() : null,
+        usuario_id: usuarioId
+      });
+      return res.json({ mensaje: 'Diagnóstico guardado' });
+    } catch (error) {
+      console.error('Error al guardar diagnóstico:', error);
+      return res.status(500).json({ error: 'Error al guardar diagnóstico' });
     }
   }
 };

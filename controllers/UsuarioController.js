@@ -76,11 +76,26 @@ const usuarioController = {
       }
 
       const { contrasena, ...usuarioSinPassword } = usuario;
+      // Guardamos al usuario en la sesión para el control de acceso por rol.
+      req.session.usuario = {
+        id: usuarioSinPassword.id,
+        nombre: usuarioSinPassword.nombre,
+        correo: usuarioSinPassword.correo,
+        rol: usuarioSinPassword.rol
+      };
       return res.json({ mensaje: 'Login exitoso', usuario: usuarioSinPassword });
     } catch (error) {
       console.error('Error en login:', error);
       return res.status(500).json({ error: 'Error en el servidor' });
     }
+  },
+
+  // POST /api/logout — cierra la sesión del usuario
+  logout(req, res) {
+    if (req.session) {
+      return req.session.destroy(() => res.json({ mensaje: 'Sesión cerrada' }));
+    }
+    return res.json({ mensaje: 'Sesión cerrada' });
   },
 
   async obtenerEstadisticas(req, res) {

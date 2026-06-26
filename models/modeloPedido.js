@@ -11,7 +11,7 @@ const Pedido = {
         COALESCE(p.servicio, pr.nombre) AS servicio,
         p.estado          AS estado,
         p.total           AS total,
-        p.fecha           AS fecha,
+        p.creado_en       AS fecha,
         p.cantidad        AS cantidad,
         p.usuario_id      AS usuario_id,
         p.producto_id     AS producto_id
@@ -28,7 +28,7 @@ const Pedido = {
     const [filas] = await pool.query(`
       SELECT p.id, p.cantidad, p.total, p.estado,
         COALESCE(p.servicio, pr.nombre) AS servicio,
-        p.fecha, pr.nombre AS producto_nombre, pr.precio AS producto_precio
+        p.creado_en AS fecha, pr.nombre AS producto_nombre, pr.precio AS producto_precio
       FROM pedidos p
       INNER JOIN productos pr ON p.producto_id = pr.id
       WHERE p.usuario_id = ?

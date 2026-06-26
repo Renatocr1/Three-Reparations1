@@ -118,9 +118,13 @@ function cambiarFiltro(nuevoFiltro) {
  * Elimina un usuario tras confirmación, con animación de fila + spinner en el botón.
  */
 async function eliminarUsuario(event, id, nombre) {
-  if (!confirm(`¿Eliminar al usuario "${nombre}"?\n\nEsta acción no se puede deshacer.`)) {
-    return;
-  }
+  const ok = await confirmarAccion({
+    titulo: 'Eliminar usuario',
+    mensaje: '¿Eliminar al usuario "' + nombre + '"? Esta acción no se puede deshacer.',
+    textoConfirmar: 'Eliminar',
+    peligro: true
+  });
+  if (!ok) return;
 
   // Referencias al botón y la fila
   const boton = event.currentTarget;
@@ -140,6 +144,8 @@ async function eliminarUsuario(event, id, nombre) {
     // Animar la fila antes de recargar
     fila.classList.add('eliminando-fila');
 
+    mostrarToast('Usuario eliminado', 'ok');
+
     // Esperar a que termine la animación (0.5s) y recargar
     setTimeout(() => {
       cargarUsuarios();
@@ -150,7 +156,7 @@ async function eliminarUsuario(event, id, nombre) {
     // Restaurar el botón si falló
     boton.classList.remove('eliminando');
     boton.innerHTML = `<i class='bx bx-trash'></i> Eliminar`;
-    alert(`No se pudo eliminar el usuario: ${err.message}`);
+    mostrarToast(`No se pudo eliminar el usuario: ${err.message}`, 'error');
   }
 }
 

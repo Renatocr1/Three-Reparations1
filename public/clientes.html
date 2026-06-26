@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three Reparations - Clientes</title>
+
+    <link rel="stylesheet" href="styleadmin.css">
+    <link rel="website icon" type="png" href="Imagenes/Three reparations.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="png" href="Imagenes/logo_three.png">
+
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <!-- PROTECCIÓN: solo admins pueden entrar aquí -->
+    <script>
+        // Recuperamos el usuario guardado al iniciar sesión
+        const usuario = JSON.parse(sessionStorage.getItem('usuario'));
+
+        // Si no existe o su rol no es admin, lo expulsamos
+        if (!usuario || usuario.rol !== 'admin') {
+            window.location.href = 'index.html';
+        }
+    </script>
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="Imagenes/logo_three.png" alt="Logo">
+            <span>Three Reparations</span>
+        </div>
+
+        <div class="sidebar-search">
+            <div class="sidebar-search-box">
+                <i class='bx bx-search'></i>
+                <input type="search" placeholder="Buscar...">
+            </div>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-title">Principal</li>
+            <li class="menu-item"><a href="admin.html" class="menu-link"><i class='bx bx-home-alt'></i><span>Inicio</span></a></li>
+            <li class="menu-item"><a href="reparaciones.html" class="menu-link"><i class='bx bx-wrench'></i><span>Reparaciones</span></a></li>
+            <li class="menu-item"><a href="servicios.html" class="menu-link"><i class='bx bx-list-ul'></i><span>Servicios</span></a></li>
+            <li class="menu-item"><a href="clientes.html" class="menu-link active"><i class='bx bx-group'></i><span>Clientes</span></a></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar" id="avatar"></div>
+                <div class="sidebar-user-info">
+                    <h4 id="nombreSidebar"></h4>
+                    <p>Administrador</p>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="cerrarSesion()">
+                <i class='bx bx-log-out'></i>
+                Cerrar sesión
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <div class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="topbar-title">
+                    <h1>Clientes</h1>
+                    <p>Usuarios registrados en el sistema</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ESTADÍSTICAS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <i class='bx bx-group'></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="statClientes">0</h3>
+                    <p>Clientes registrados</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon purple">
+                    <i class='bx bx-shield'></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="statAdmins">0</h3>
+                    <p>Administradores</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon green">
+                    <i class='bx bx-user-check'></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="statTotal">0</h3>
+                    <p>Total de usuarios</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLA DE CLIENTES -->
+        <div class="tabla-card">
+            <div class="tabla-header">
+                <h2>
+                    <i class='bx bx-group'></i>
+                    Usuarios registrados
+                </h2>
+
+                <div class="tabla-acciones">
+                    <div class="filtros">
+                        <button class="filtro-btn active" data-filtro="todos">Todos</button>
+                        <button class="filtro-btn" data-filtro="cliente">Clientes</button>
+                        <button class="filtro-btn" data-filtro="admin">Administradores</button>
+                    </div>
+                    <button class="btn-recargar" onclick="cargarUsuarios()">
+                        <i class='bx bx-refresh'></i>
+                        Recargar
+                    </button>
+                </div>
+            </div>
+
+            <div class="tabla-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Rol</th>
+                            <th>Registrado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaClientesBody">
+                        <tr>
+                            <td colspan="5" style="text-align:center; padding:30px; color:#999;">
+                                Cargando clientes...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Datos del admin en el sidebar
+        const nombreAdmin = usuario.nombre;
+        const inicial = nombreAdmin.charAt(0).toUpperCase();
+
+        document.getElementById('avatar').textContent = inicial;
+        document.getElementById('nombreSidebar').textContent = nombreAdmin;
+
+        // Toggle sidebar (móvil)
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // Cerrar sesión
+        function cerrarSesion() {
+            sessionStorage.removeItem('usuario');
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <!-- Feedback compartido (toasts + confirmaciones) -->
+    <script src="ui-feedback.js"></script>
+    <!-- Script que conecta con la API -->
+    <script src="scriptadmin.js"></script>
+</body>
+
+</html>

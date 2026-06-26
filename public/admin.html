@@ -14,7 +14,6 @@
 
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
-
     <!-- PROTECCIÓN: solo admins pueden entrar aquí -->
     <script>
         // Recuperamos el usuario guardado al iniciar sesión
@@ -26,25 +25,82 @@
         }
     </script>
 
-    <!-- const usuarioAdmin = JSON.parse(sessionStorage.getItem('usuario'));
-    if (!usuarioAdmin) {
-    window.location.href = 'index.html';
-    } else if (usuarioAdmin.rol !== 'admin') {
-    window.location.href = 'cliente.html';
-    } 
+    <!-- Estilos propios del dashboard de bienvenida (no tocar styleadmin.css) -->
+    <style>
+        .dash-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 10px;
+        }
 
-    // Coloca esto al principio de admin.html
-    const usuario = JSON.parse(sessionStorage.getItem('usuario'));
+        .dash-card {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background: #ffffff;
+            border: 1px solid #e9edf5;
+            border-radius: 18px;
+            padding: 26px 24px;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 4px 14px rgba(20, 30, 70, 0.05);
+            transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+            position: relative;
+            overflow: hidden;
+        }
 
-    if (!usuario || usuario.rol !== 'admin') {
-    // Si no hay usuario o el rol no es admin, mándalo de vuelta al login
-    alert("Acceso denegado: Se requieren permisos de administrador.");
-    window.location.href = 'index.html';
-    } -->
+        .dash-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 34px rgba(116, 148, 236, 0.22);
+            border-color: #c8d4f7;
+        }
 
+        .dash-card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: #fff;
+            flex-shrink: 0;
+        }
 
+        .dash-card-icon.blue { background: linear-gradient(135deg, #7494ec, #5b78d6); }
+        .dash-card-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
+        .dash-card-icon.amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
 
+        .dash-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1f2740;
+            margin: 0;
+        }
 
+        .dash-card p {
+            font-size: .92rem;
+            line-height: 1.5;
+            color: #6b7488;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .dash-card-foot {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: .9rem;
+            color: #7494ec;
+            transition: gap .22s ease;
+        }
+
+        .dash-card:hover .dash-card-foot {
+            gap: 12px;
+        }
+    </style>
 </head>
 
 <body>
@@ -64,56 +120,10 @@
 
         <ul class="sidebar-menu">
             <li class="sidebar-menu-title">Principal</li>
-
-            <li class="menu-item">
-                <a href="#" class="menu-link active">
-                    <i class='bx bx-home-alt'></i>
-                    <span>Inicio</span>
-                </a>
-            </li>
-
-            <li class="menu-item">
-                <a href="#" class="menu-link" onclick="toggleSubmenu(event, this)">
-                    <i class='bx bx-store'></i>
-                    <span>Tienda</span>
-                    <i class='bx bx-chevron-down flecha'></i>
-                </a>
-                <ul class="sub-menu">
-                    <li><a href="#">Productos</a></li>
-                    <li><a href="Pedidos.html">Pedidos</a></li>
-                    <li><a href="#">Suscripciones</a></li>
-                </ul>
-            </li>
-
-            <li class="menu-item">
-                <a href="#" class="menu-link">
-                    <i class='bx bx-group'></i>
-                    <span>Clientes</span>
-                </a>
-            </li>
-
-            <li class="menu-item">
-                <a href="#" class="menu-link">
-                    <i class='bx bx-wrench'></i>
-                    <span>Reparaciones</span>
-                </a>
-            </li>
-
-            <li class="sidebar-menu-title">Sistema</li>
-
-            <li class="menu-item">
-                <a href="#" class="menu-link">
-                    <i class='bx bx-bar-chart-alt-2'></i>
-                    <span>Reportes</span>
-                </a>
-            </li>
-
-            <li class="menu-item">
-                <a href="#" class="menu-link">
-                    <i class='bx bx-cog'></i>
-                    <span>Configuración</span>
-                </a>
-            </li>
+            <li class="menu-item"><a href="admin.html" class="menu-link active"><i class='bx bx-home-alt'></i><span>Inicio</span></a></li>
+            <li class="menu-item"><a href="reparaciones.html" class="menu-link"><i class='bx bx-wrench'></i><span>Reparaciones</span></a></li>
+            <li class="menu-item"><a href="servicios.html" class="menu-link"><i class='bx bx-list-ul'></i><span>Servicios</span></a></li>
+            <li class="menu-item"><a href="clientes.html" class="menu-link"><i class='bx bx-group'></i><span>Clientes</span></a></li>
         </ul>
 
         <div class="sidebar-footer">
@@ -140,98 +150,38 @@
                 </button>
                 <div class="topbar-title">
                     <h1 id="saludo"></h1>
-                    <p>Bienvenido al panel de administración</p>
+                    <p>Panel de administración — Three Reparations</p>
                 </div>
             </div>
         </div>
 
-        <!-- ESTADÍSTICAS -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon blue">
-                    <i class='bx bx-group'></i>
-                </div>
-                <div class="stat-info">
-                    <h3 id="statClientes">0</h3>
-                    <p>Clientes registrados</p>
-                </div>
-            </div>
+        <!-- TARJETAS INTRODUCTORIAS DE MÓDULOS -->
+        <div class="dash-grid">
+            <a href="reparaciones.html" class="dash-card">
+                <div class="dash-card-icon blue"><i class='bx bx-wrench'></i></div>
+                <h3>Reparaciones</h3>
+                <p>Gestiona el flujo de reparaciones, estados y diagnósticos.</p>
+                <span class="dash-card-foot">Abrir Reparaciones <i class='bx bx-right-arrow-alt'></i></span>
+            </a>
 
-            <div class="stat-card">
-                <div class="stat-icon purple">
-                    <i class='bx bx-shield'></i>
-                </div>
-                <div class="stat-info">
-                    <h3 id="statAdmins">0</h3>
-                    <p>Administradores</p>
-                </div>
-            </div>
+            <a href="servicios.html" class="dash-card">
+                <div class="dash-card-icon green"><i class='bx bx-list-ul'></i></div>
+                <h3>Servicios</h3>
+                <p>Catálogo de servicios, precios y disponibilidad.</p>
+                <span class="dash-card-foot">Abrir Servicios <i class='bx bx-right-arrow-alt'></i></span>
+            </a>
 
-            <div class="stat-card">
-                <div class="stat-icon green">
-                    <i class='bx bx-user-check'></i>
-                </div>
-                <div class="stat-info">
-                    <h3 id="statTotal">0</h3>
-                    <p>Total de usuarios</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- TABLA DE CLIENTES -->
-        <div class="tabla-card">
-            <!-- <div class="tabla-header">
-                <h2>
-                    <i class='bx bx-group'></i>
-                    Clientes registrados
-                </h2>
-                <button class="btn-recargar" onclick="cargarUsuarios()">
-                    <i class='bx bx-refresh'></i>
-                    Recargar
-                </button>
-            </div> -->
-
-            <div class="tabla-header">
-                <h2>
-                    <i class='bx bx-group'></i>
-                    Usuarios registrados
-                </h2>
-
-                <div class="tabla-acciones">
-                    <div class="filtros">
-                        <button class="filtro-btn active" data-filtro="todos">Todos</button>
-                        <button class="filtro-btn" data-filtro="cliente">Clientes</button>
-                        <button class="filtro-btn" data-filtro="admin">Administradores</button>
-                    </div>
-                    <button class="btn-recargar" onclick="cargarUsuarios()">
-                        <i class='bx bx-refresh'></i>
-                        Recargar
-                    </button>
-                </div>
-            </div>
-
-            <div class="tabla-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Correo</th>
-                            <th>Rol</th>
-                            <th>Registrado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaClientesBody">
-                        <tr>
-                            <td colspan="5" style="text-align:center; padding:30px; color:#999;">
-                                Cargando clientes...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <a href="clientes.html" class="dash-card">
+                <div class="dash-card-icon amber"><i class='bx bx-group'></i></div>
+                <h3>Clientes</h3>
+                <p>Usuarios registrados, clientes y administradores.</p>
+                <span class="dash-card-foot">Abrir Clientes <i class='bx bx-right-arrow-alt'></i></span>
+            </a>
         </div>
     </main>
+
+    <!-- Contrato de feedback compartido -->
+    <script src="ui-feedback.js"></script>
 
     <script>
         // Datos del admin en el sidebar
@@ -241,15 +191,6 @@
         document.getElementById('avatar').textContent = inicial;
         document.getElementById('nombreSidebar').textContent = nombreAdmin;
         document.getElementById('saludo').textContent = 'Hola, ' + nombreAdmin + ' 👋';
-
-        // Toggle submenús
-        function toggleSubmenu(event, link) {
-            event.preventDefault();
-            const item = link.parentElement;
-            const submenu = item.querySelector('.sub-menu');
-            submenu.classList.toggle('open');
-            item.classList.toggle('open');
-        }
 
         // Toggle sidebar (móvil)
         function toggleSidebar() {
@@ -262,9 +203,6 @@
             window.location.href = 'index.html';
         }
     </script>
-
-    <!-- Script que conecta con la API -->
-    <script src="scriptadmin.js"></script>
 </body>
 
 </html>

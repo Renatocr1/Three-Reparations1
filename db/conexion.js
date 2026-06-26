@@ -3,13 +3,15 @@
 // ============================================
 const mysql = require('mysql2/promise');
 
-const DB_NAME = 'integracion1';
+// Configuración por variables de entorno con los valores de XAMPP por defecto,
+// para que funcione igual en el equipo de desarrollo (XAMPP) y en otros entornos.
+const DB_NAME = process.env.DB_NAME || 'integracion1';
 
 const baseConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  port: 3306,
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  port: Number(process.env.DB_PORT) || 3306,
   waitForConnections: true,
   connectionLimit: 10
 };
@@ -81,17 +83,75 @@ async function asegurarEstructura() {
     await pool.query(`ALTER TABLE pedidos ADD COLUMN servicio VARCHAR(150) DEFAULT NULL`);
   }
 
+  // Catálogo de servicios del taller (lo que se ofrece reparar)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS servicios (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      nombre VARCHAR(150) NOT NULL,
+      descripcion TEXT DEFAULT NULL,
+      categoria VARCHAR(80) DEFAULT NULL,
+      precio DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+      dias_estimados INT(11) NOT NULL DEFAULT 1,
+      activo TINYINT(1) NOT NULL DEFAULT 1,
+      creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  `);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS reparaciones (
       id INT(11) NOT NULL AUTO_INCREMENT,
       usuario_id INT(11) NOT NULL,
+      servicio_id INT(11) DEFAULT NULL,
       equipo VARCHAR(150) NOT NULL,
+      marca VARCHAR(50) NOT NULL DEFAULT '',
+      modelo VARCHAR(50) NOT NULL DEFAULT '',
+      fecha_problema DATE DEFAULT NULL,
       descripcion TEXT NOT NULL,
-      estado ENUM('pendiente','en_proceso','listo','entregado','cancelado') NOT NULL DEFAULT 'pendiente',
-      creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      estado ENUM('pendiente','en_diagnostico','en_reparacion','finalizado','entregado') NOT NULL DEFAULT 'pendiente',
+      total DECIMAL(10,2) DEFAULT NULL,
+      fecha_registro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY usuario_id (usuario_id),
+      KEY servicio_id (servicio_id),
       CONSTRAINT reparaciones_ibfk_1 FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  `);
+
+  // Historial de cambios de estado de cada reparación (trazabilidad)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS reparacion_historial (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      reparacion_id INT(11) NOT NULL,
+      estado_anterior VARCHAR(50) DEFAULT NULL,
+      estado_nuevo VARCHAR(50) NOT NULL,
+      usuario_id INT(11) DEFAULT NULL,
+      notas TEXT DEFAULT NULL,
+      creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      KEY reparacion_id (reparacion_id),
+      KEY usuario_id (usuario_id),
+      CONSTRAINT fk_historial_reparacion FOREIGN KEY (reparacion_id) REFERENCES reparaciones (id) ON DELETE CASCADE,
+      CONSTRAINT fk_historial_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  `);
+
+  // Diagnóstico técnico de una reparación (uno por reparación)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS diagnosticos (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      reparacion_id INT(11) NOT NULL,
+      hallazgos TEXT NOT NULL,
+      recomendaciones TEXT DEFAULT NULL,
+      repuestos TEXT DEFAULT NULL,
+      usuario_id INT(11) DEFAULT NULL,
+      creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      UNIQUE KEY reparacion_id (reparacion_id),
+      KEY usuario_id (usuario_id),
+      CONSTRAINT fk_diag_reparacion FOREIGN KEY (reparacion_id) REFERENCES reparaciones (id) ON DELETE CASCADE,
+      CONSTRAINT fk_diag_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
   `);
 
@@ -128,6 +188,43 @@ async function asegurarEstructura() {
       // Si ya existía la FK con ese nombre o falla por otro motivo, no abortamos.
       console.warn('No se pudo agregar la FK reparaciones_ibfk_1 (puede que ya exista):', e.message);
     }
+  }
+
+  // Auto-migración: si una BD antigua no tiene `servicio_id` en reparaciones, la añadimos
+  const [colsServicioId] = await pool.query(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'reparaciones' AND COLUMN_NAME = 'servicio_id'`,
+    [DB_NAME]
+  );
+  if (colsServicioId.length === 0) {
+    await pool.query(`ALTER TABLE reparaciones ADD COLUMN servicio_id INT(11) DEFAULT NULL AFTER usuario_id`);
+    await pool.query(`ALTER TABLE reparaciones ADD KEY servicio_id (servicio_id)`);
+    try {
+      await pool.query(`
+        ALTER TABLE reparaciones
+        ADD CONSTRAINT fk_reparacion_servicio
+        FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE SET NULL
+      `);
+    } catch (e) {
+      console.warn('No se pudo agregar la FK fk_reparacion_servicio:', e.message);
+    }
+  }
+
+  // Sembrar el catálogo de servicios si está vacío
+  const [conteoServicios] = await pool.query('SELECT COUNT(*) AS n FROM servicios');
+  if (conteoServicios[0].n === 0) {
+    await pool.query(`
+      INSERT INTO servicios (nombre, descripcion, categoria, precio, dias_estimados, activo) VALUES
+      ('Reparación de pantalla', 'Cambio de pantalla o módulo dañado.', 'Teléfono', 50000, 2, 1),
+      ('Reparación de pantalla', 'Cambio de panel para notebook.', 'Computador', 60000, 3, 1),
+      ('Cambio de batería', 'Reemplazo de batería degradada.', 'Teléfono', 80000, 1, 1),
+      ('Cambio de batería', 'Reemplazo de batería de notebook.', 'Computador', 100000, 2, 1),
+      ('Reparación de placa', 'Reparación de placa o circuito dañado.', 'General', 120000, 4, 1),
+      ('Reparación de botones', 'Reparación de botones o teclado.', 'General', 70000, 2, 1),
+      ('Diagnóstico general', 'Revisión técnica y diagnóstico del equipo.', 'General', 15000, 1, 1),
+      ('Formateo e instalación', 'Reinstalación de sistema y programas.', 'Computador', 30000, 1, 1)
+    `);
+    console.log('[db] Catálogo de servicios sembrado');
   }
 }
 
