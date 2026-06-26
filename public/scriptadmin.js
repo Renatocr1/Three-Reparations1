@@ -27,7 +27,11 @@ async function cargarUsuarios() {
     </tr>`;
 
   try {
-    const res = await fetch(`${API_URL}/usuarios`);
+    const res = await fetch(`${API_URL}/usuarios`, {
+      method: 'GET',
+      credentials: 'include' // Obligatorio para enviar la cookie de sesión
+    });
+    
     if (!res.ok) throw new Error(`Error ${res.status} al cargar usuarios`);
     todosLosUsuarios = await res.json();
 
@@ -46,7 +50,6 @@ async function cargarUsuarios() {
 
 /**
  * Actualiza las tres tarjetas de estadísticas con los totales reales.
- * Estos totales NO cambian con el filtro: siempre reflejan el total de la BD.
  */
 function actualizarEstadisticas() {
   const clientes = todosLosUsuarios.filter(u => u.rol === 'cliente').length;
@@ -65,7 +68,6 @@ function renderizarTabla() {
     ? todosLosUsuarios
     : todosLosUsuarios.filter(u => u.rol === filtroActual);
 
-  // Sin resultados
   if (usuariosFiltrados.length === 0) {
     const etiqueta = filtroActual === 'todos'
       ? 'usuarios'
@@ -80,7 +82,6 @@ function renderizarTabla() {
     return;
   }
 
-  // Renderizar filas
   tbody.innerHTML = usuariosFiltrados.map(u => `
     <tr data-id="${u.id}">
       <td>${escaparHTML(u.nombre)}</td>
@@ -105,17 +106,14 @@ function renderizarTabla() {
  */
 function cambiarFiltro(nuevoFiltro) {
   filtroActual = nuevoFiltro;
-
-  // Actualizar estado visual de los botones
   document.querySelectorAll('.filtro-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.filtro === nuevoFiltro);
   });
-
   renderizarTabla();
 }
 
 /**
- * Elimina un usuario tras confirmación, con animación de fila + spinner en el botón.
+ * Elimina un usuario tras confirmación.
  */
 async function eliminarUsuario(event, id, nombre) {
   const ok = await confirmarAccion({
@@ -126,79 +124,59 @@ async function eliminarUsuario(event, id, nombre) {
   });
   if (!ok) return;
 
-  // Referencias al botón y la fila
   const boton = event.currentTarget;
   const fila = boton.closest('tr');
 
-  // Estado visual: spinner en el botón
   boton.classList.add('eliminando');
   boton.innerHTML = `<i class='bx bx-loader-alt'></i> Eliminando...`;
 
   try {
-    const res = await fetch(`${API_URL}/usuarios/${id}`, { method: 'DELETE' });
+    const res = await fetch(`${API_URL}/usuarios/${id}`, { 
+      method: 'DELETE',
+      credentials: 'include' // Obligatorio para enviar la cookie de sesión
+    });
+    
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.error || `Error ${res.status}`);
     }
 
-    // Animar la fila antes de recargar
     fila.classList.add('eliminando-fila');
-
     mostrarToast('Usuario eliminado', 'ok');
 
-    // Esperar a que termine la animación (0.5s) y recargar
     setTimeout(() => {
       cargarUsuarios();
     }, 500);
 
   } catch (err) {
     console.error('Error al eliminar:', err);
-    // Restaurar el botón si falló
     boton.classList.remove('eliminando');
     boton.innerHTML = `<i class='bx bx-trash'></i> Eliminar`;
     mostrarToast(`No se pudo eliminar el usuario: ${err.message}`, 'error');
   }
 }
 
-// ============================================
-// Utilidades
-// ============================================
-
 /**
- * Formatea fechas en formato dd-mm-aaaa (es-CL).
- * Devuelve '—' si la fecha es inválida o nula.
+ * Utilidades: Formateo de fechas y escape HTML
  */
 function formatearFecha(fecha) {
   if (!fecha) return '—';
   const d = new Date(fecha);
   if (isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('es-CL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
+    day: '2-digit', month: '2-digit', year: 'numeric'
   });
 }
 
-/**
- * Escapa HTML para prevenir inyección desde nombres/correos de la BD.
- */
 function escaparHTML(texto) {
   if (texto == null) return '';
   return String(texto)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// ============================================
-// Inicialización
-// ============================================
 document.addEventListener('DOMContentLoaded', () => {
   cargarUsuarios();
-
-  // Botones de filtro
   document.querySelectorAll('.filtro-btn').forEach(btn => {
     btn.addEventListener('click', () => cambiarFiltro(btn.dataset.filtro));
   });
