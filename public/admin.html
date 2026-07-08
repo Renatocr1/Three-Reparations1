@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three Reparations - Panel de Administración</title>
+
+    <link rel="stylesheet" href="styleadmin.css">
+    <link rel="website icon" type="png" href="Imagenes/Three reparations.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="png" href="Imagenes/logo_three.png">
+
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <!-- PROTECCIÓN: solo admins pueden entrar aquí -->
+    <script>
+        // Recuperamos el usuario guardado al iniciar sesión
+        const usuario = JSON.parse(sessionStorage.getItem('usuario'));
+
+        // Si no existe o su rol no es admin, lo expulsamos
+        if (!usuario || usuario.rol !== 'admin') {
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <!-- Estilos propios del dashboard de bienvenida (no tocar styleadmin.css) -->
+    <style>
+        .dash-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 10px;
+        }
+
+        .dash-card {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background: #ffffff;
+            border: 1px solid #e9edf5;
+            border-radius: 18px;
+            padding: 26px 24px;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 4px 14px rgba(20, 30, 70, 0.05);
+            transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dash-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 34px rgba(116, 148, 236, 0.22);
+            border-color: #c8d4f7;
+        }
+
+        .dash-card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .dash-card-icon.blue { background: linear-gradient(135deg, #7494ec, #5b78d6); }
+        .dash-card-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
+        .dash-card-icon.amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+        .dash-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1f2740;
+            margin: 0;
+        }
+
+        .dash-card p {
+            font-size: .92rem;
+            line-height: 1.5;
+            color: #6b7488;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .dash-card-foot {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: .9rem;
+            color: #7494ec;
+            transition: gap .22s ease;
+        }
+
+        .dash-card:hover .dash-card-foot {
+            gap: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="Imagenes/logo_three.png" alt="Logo">
+            <span>Three Reparations</span>
+        </div>
+
+        <div class="sidebar-search">
+            <div class="sidebar-search-box">
+                <i class='bx bx-search'></i>
+                <input type="search" placeholder="Buscar...">
+            </div>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-title">Principal</li>
+            <li class="menu-item"><a href="admin.html" class="menu-link active"><i class='bx bx-home-alt'></i><span>Inicio</span></a></li>
+            <li class="menu-item"><a href="reparaciones.html" class="menu-link"><i class='bx bx-wrench'></i><span>Reparaciones</span></a></li>
+            <li class="menu-item"><a href="servicios.html" class="menu-link"><i class='bx bx-list-ul'></i><span>Servicios</span></a></li>
+            <li class="menu-item"><a href="clientes.html" class="menu-link"><i class='bx bx-group'></i><span>Clientes</span></a></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar" id="avatar"></div>
+                <div class="sidebar-user-info">
+                    <h4 id="nombreSidebar"></h4>
+                    <p>Administrador</p>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="cerrarSesion()">
+                <i class='bx bx-log-out'></i>
+                Cerrar sesión
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <div class="topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="topbar-title">
+                    <h1 id="saludo"></h1>
+                    <p>Panel de administración — Three Reparations</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TARJETAS INTRODUCTORIAS DE MÓDULOS -->
+        <div class="dash-grid">
+            <a href="reparaciones.html" class="dash-card">
+                <div class="dash-card-icon blue"><i class='bx bx-wrench'></i></div>
+                <h3>Reparaciones</h3>
+                <p>Gestiona el flujo de reparaciones, estados y diagnósticos.</p>
+                <span class="dash-card-foot">Abrir Reparaciones <i class='bx bx-right-arrow-alt'></i></span>
+            </a>
+
+            <a href="servicios.html" class="dash-card">
+                <div class="dash-card-icon green"><i class='bx bx-list-ul'></i></div>
+                <h3>Servicios</h3>
+                <p>Catálogo de servicios, precios y disponibilidad.</p>
+                <span class="dash-card-foot">Abrir Servicios <i class='bx bx-right-arrow-alt'></i></span>
+            </a>
+
+            <a href="clientes.html" class="dash-card">
+                <div class="dash-card-icon amber"><i class='bx bx-group'></i></div>
+                <h3>Clientes</h3>
+                <p>Usuarios registrados, clientes y administradores.</p>
+                <span class="dash-card-foot">Abrir Clientes <i class='bx bx-right-arrow-alt'></i></span>
+            </a>
+        </div>
+    </main>
+
+    <!-- Contrato de feedback compartido -->
+    <script src="ui-feedback.js"></script>
+
+    <script>
+        // Datos del admin en el sidebar
+        const nombreAdmin = usuario.nombre;
+        const inicial = nombreAdmin.charAt(0).toUpperCase();
+
+        document.getElementById('avatar').textContent = inicial;
+        document.getElementById('nombreSidebar').textContent = nombreAdmin;
+        document.getElementById('saludo').textContent = 'Hola, ' + nombreAdmin + ' 👋';
+
+        // Toggle sidebar (móvil)
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // Cerrar sesión
+        function cerrarSesion() {
+            sessionStorage.removeItem('usuario');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>

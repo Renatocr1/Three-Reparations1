@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three Reparations - Mi cuenta</title>
+
+    <!-- PROTECCIÓN: solo clientes pueden entrar aquí -->
+    <script>
+        const usuarioCliente = JSON.parse(sessionStorage.getItem('usuario'));
+        if (!usuarioCliente) {
+            window.location.href = 'index.html';
+        } else if (usuarioCliente.rol === 'admin') {
+            window.location.href = 'admin.html';
+        }
+    </script>
+    <link rel="stylesheet" href="cliente.css">
+    <link rel="website icon" type="png" href="Imagenes/Three reparations.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="png" href="Imagenes/logo_three.png">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+
+    <style>
+        /* ====== Estilos del modal "Solicitar reparación" ====== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.activo {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-ventana {
+            background: #fff;
+            border-radius: 16px;
+            width: 94vw;
+            max-width: 640px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.25s ease;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .modal-overlay.activo .modal-ventana {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #7494ec, #5a7bd4);
+            color: #fff;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .modal-cerrar {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .modal-cerrar:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-cuerpo {
+            padding: 28px 30px;
+        }
+
+        .modal-cuerpo .campo {
+            margin-bottom: 20px;
+        }
+
+        /* Grilla responsive para Tipo / Marca / Modelo */
+        .campo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px 18px;
+            margin-bottom: 20px;
+        }
+
+        .campo-grid .campo {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 560px) {
+            .campo-grid {
+                grid-template-columns: 1fr;
+            }
+            .modal-cuerpo {
+                padding: 22px 20px;
+            }
+        }
+
+        .modal-cuerpo label {
+            display: block;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #3a3a3a;
+            margin-bottom: 7px;
+        }
+
+        .modal-cuerpo input,
+        .modal-cuerpo textarea,
+        .modal-cuerpo select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 9px;
+            font-size: 14.5px;
+            font-family: inherit;
+            color: #333;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            box-sizing: border-box;
+            background: #fafbff;
+        }
+
+        .modal-cuerpo input:focus,
+        .modal-cuerpo textarea:focus,
+        .modal-cuerpo select:focus {
+            border-color: #7494ec;
+            box-shadow: 0 0 0 3px rgba(116, 148, 236, 0.15);
+            background: #fff;
+        }
+
+        .modal-cuerpo textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 15px 25px 25px;
+        }
+
+        .btn-modal {
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-modal.secundario {
+            background: #f1f1f1;
+            color: #555;
+        }
+
+        .btn-modal.secundario:hover {
+            background: #e5e5e5;
+        }
+
+        .btn-modal.primario {
+            background: #7494ec;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-modal.primario:hover {
+            background: #5a7bd4;
+        }
+
+        .btn-modal.primario:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .modal-mensaje {
+            padding: 0 25px 15px;
+            min-height: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .modal-mensaje.ok { color: #0f9d58; }
+        .modal-mensaje.error { color: #dc2626; }
+
+        /* ====== Catálogo de servicios ====== */
+        .servicio-elegido {
+            padding: 11px 14px;
+            border-radius: 8px;
+            background: #eef2ff;
+            color: #4863b8;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .catalogo-intro { font-size: 14px; color: #555; margin: 0 0 16px; }
+        .catalogo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+            gap: 14px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .servicio-card {
+            border: 1.5px solid #e6e6e6;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .servicio-card:hover { border-color: #7494ec; box-shadow: 0 6px 16px rgba(116,148,236,.15); }
+        .servicio-card h4 { margin: 0; font-size: 15px; color: #333; }
+        .servicio-card .sc-cat { font-size: 12px; color: #888; }
+        .servicio-card .sc-desc { font-size: 13px; color: #555; flex: 1; }
+        .servicio-card .sc-precio { font-weight: 700; color: #4863b8; }
+        .servicio-card button {
+            margin-top: 6px;
+            background: #7494ec; color: #fff; border: none;
+            padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer;
+            font-family: inherit; font-size: 13px;
+        }
+        .servicio-card button:hover { background: #5a7bd4; }
+    </style>
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <img src="Imagenes/logo_three.png" alt="Logo">
+            <span>Three Reparations</span>
+        </div>
+
+        <div class="navbar-user">
+            <div class="user-info">
+                <div class="user-avatar" id="avatar"></div>
+                <span id="nombreNavbar"></span>
+            </div>
+            <button class="btn-logout" onclick="cerrarSesion()">
+                <i class='bx bx-log-out'></i>
+                Cerrar sesión
+            </button>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="container">
+
+        <!-- HERO -->
+        <div class="hero">
+            <div class="hero-text">
+                <h1 id="bienvenida"></h1>
+                <p>Gestiona tus reparaciones desde aquí.</p>
+            </div>
+            <i class='bx bx-user-circle hero-icon'></i>
+        </div>
+
+        <!-- ACCESOS RÁPIDOS -->
+        <h2 class="seccion-titulo">
+            <i class='bx bx-grid-alt'></i>
+            Accesos rápidos
+        </h2>
+
+        <div class="grid-tarjetas">
+            <a href="reparacionesCliente.html" class="tarjeta">
+                <div class="tarjeta-icono">
+                    <i class='bx bx-wrench'></i>
+                </div>
+                <h3>Mis reparaciones</h3>
+                <p>Revisa el estado y diagnóstico de tus reparaciones.</p>
+            </a>
+
+            <!-- Esta tarjeta ahora abre el modal -->
+            <a href="#" class="tarjeta" id="tarjetaReparacion">
+                <div class="tarjeta-icono">
+                    <i class='bx bx-wrench'></i>
+                </div>
+                <h3>Solicitar reparación</h3>
+                <p>Pide una nueva reparación o servicio técnico.</p>
+            </a>
+
+            <a href="#contacto" class="tarjeta">
+                <div class="tarjeta-icono">
+                    <i class='bx bx-support'></i>
+                </div>
+                <h3>Contáctanos</h3>
+                <p>¿Necesitas ayuda? Escríbenos por WhatsApp o redes.</p>
+            </a>
+        </div>
+
+        <!-- INFORMACIÓN DE CUENTA -->
+        <h2 class="seccion-titulo">
+            <i class='bx bx-user'></i>
+            Información de mi cuenta
+        </h2>
+
+        <div class="info-cuenta">
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Nombre</label>
+                    <span id="infoNombre"></span>
+                </div>
+                <div class="info-item">
+                    <label>Correo</label>
+                    <span id="infoCorreo"></span>
+                </div>
+                <div class="info-item">
+                    <label>Tipo de cuenta</label>
+                    <span id="infoRol"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODAL: Solicitar reparación                  -->
+    <!-- ============================================ -->
+    <div class="modal-overlay" id="modalReparacion">
+        <div class="modal-ventana">
+            <div class="modal-header">
+                <h2><i class='bx bx-wrench'></i> Solicitar reparación</h2>
+                <button class="modal-cerrar" type="button" onclick="cerrarModalReparacion()">
+                    <i class='bx bx-x'></i>
+                </button>
+            </div>
+
+            <form id="formReparacion" novalidate>
+                <div class="modal-cuerpo">
+                    <div class="campo">
+                        <label>Servicio solicitado</label>
+                        <div id="repServicioNombre" class="servicio-elegido">—</div>
+                    </div>
+
+                    <div class="campo-grid">
+                        <div class="campo">
+                            <label for="repTipo">Tipo de dispositivo *</label>
+                            <input type="text" id="repTipo" placeholder="Ej: Computador, Teléfono, Tablet...">
+                        </div>
+                        <div class="campo">
+                            <label for="repMarca">Marca *</label>
+                            <select id="repMarca"><option value="">Selecciona una marca…</option></select>
+                        </div>
+                        <div class="campo">
+                            <label for="repModelo">Modelo *</label>
+                            <select id="repModelo" disabled><option value="">Elige primero una marca…</option></select>
+                        </div>
+                    </div>
+
+                    <div class="campo">
+                        <label for="repDescripcion">Descripción del problema *</label>
+                        <textarea id="repDescripcion" placeholder="Cuéntanos qué le pasa..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-mensaje" id="modalMensaje"></div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal secundario" onclick="cerrarModalReparacion()">Cancelar</button>
+                    <button type="submit" class="btn-modal primario" id="btnEnviarReparacion">
+                        <i class='bx bx-send'></i> Enviar solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODAL: Catálogo de servicios (elegir primero) -->
+    <!-- ============================================ -->
+    <div class="modal-overlay" id="modalServicios">
+        <div class="modal-ventana" style="max-width: 660px;">
+            <div class="modal-header">
+                <h2><i class='bx bx-list-ul'></i> Elige un servicio</h2>
+                <button class="modal-cerrar" type="button" onclick="cerrarCatalogoServicios()">
+                    <i class='bx bx-x'></i>
+                </button>
+            </div>
+            <div class="modal-cuerpo">
+                <p class="catalogo-intro">Selecciona el servicio que necesitas para iniciar tu solicitud de reparación.</p>
+                <div id="catalogoServicios" class="catalogo-grid">
+                    <p style="color:#888;">Cargando servicios...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER / CONTACTO -->
+    <footer class="footer" id="contacto" style="scroll-margin-top:80px;">
+        <div style="display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;max-width:1100px;margin:0 auto;padding:24px 20px;text-align:left;">
+            <div>
+                <h3 style="margin:0 0 10px;font-size:16px;">Contáctanos</h3>
+                <p style="margin:5px 0;font-size:14px;"><i class='bx bxl-whatsapp' style="color:#25D366;"></i> WhatsApp: <a href="https://wa.me/56912345678" target="_blank" style="color:inherit;">+56 9 1234 5678</a></p>
+                <p style="margin:5px 0;font-size:14px;"><i class='bx bx-envelope'></i> contacto@threereparations.cl</p>
+                <p style="margin:5px 0;font-size:14px;"><i class='bx bx-map'></i> Talca, Chile · Lun a Vie 9:00–18:00</p>
+            </div>
+            <div>
+                <h4 style="margin:0 0 10px;font-size:14px;">Síguenos</h4>
+                <div style="display:flex;gap:16px;font-size:26px;">
+                    <a href="https://instagram.com" target="_blank" title="Instagram" style="color:inherit;"><i class='bx bxl-instagram'></i></a>
+                    <a href="https://facebook.com" target="_blank" title="Facebook" style="color:inherit;"><i class='bx bxl-facebook-circle'></i></a>
+                    <a href="https://tiktok.com" target="_blank" title="TikTok" style="color:inherit;"><i class='bx bxl-tiktok'></i></a>
+                    <a href="https://wa.me/56912345678" target="_blank" title="WhatsApp" style="color:#25D366;"><i class='bx bxl-whatsapp'></i></a>
+                </div>
+            </div>
+        </div>
+        <div style="text-align:center;padding:12px;border-top:1px solid rgba(0,0,0,.08);font-size:13px;">© 2026 Three Reparations · Todos los derechos reservados</div>
+    </footer>
+
+    <script src="marcas.js"></script>
+    <script>
+        // ====== Datos del usuario ======
+        const nombre = usuarioCliente.nombre;
+        const inicial = nombre.charAt(0).toUpperCase();
+
+        document.getElementById('avatar').textContent = inicial;
+        document.getElementById('nombreNavbar').textContent = nombre;
+        document.getElementById('bienvenida').textContent = 'Hola, ' + nombre + ' 👋';
+        document.getElementById('infoNombre').textContent = nombre;
+        document.getElementById('infoCorreo').textContent = usuarioCliente.correo;
+        document.getElementById('infoRol').textContent = usuarioCliente.rol === 'cliente' ? 'Cliente' : usuarioCliente.rol;
+
+        async function cerrarSesion() {
+            try { await fetch('/api/logout', { method: 'POST' }); } catch (e) { /* noop */ }
+            sessionStorage.removeItem('usuario');
+            window.location.href = 'index.html';
+        }
+
+        // ====== Lógica del modal ======
+        const modal = document.getElementById('modalReparacion');
+        const form = document.getElementById('formReparacion');
+        const mensaje = document.getElementById('modalMensaje');
+        const btnEnviar = document.getElementById('btnEnviarReparacion');
+
+        // Pedir reparación = primero elegir un servicio del catálogo
+        document.getElementById('tarjetaReparacion').addEventListener('click', (e) => {
+            e.preventDefault();
+            abrirCatalogoServicios();
+        });
+
+        // ====== Catálogo de servicios (se elige ANTES de ingresar los datos) ======
+        const modalServicios = document.getElementById('modalServicios');
+        let servicioSeleccionadoId = null;
+        inicializarMarcasModelos('repMarca', 'repModelo');
+
+        async function abrirCatalogoServicios() {
+            modalServicios.classList.add('activo');
+            const cont = document.getElementById('catalogoServicios');
+            cont.innerHTML = '<p style="color:#888;">Cargando servicios...</p>';
+            try {
+                const res = await fetch('/api/servicios');
+                const servicios = await res.json();
+                if (!Array.isArray(servicios) || servicios.length === 0) {
+                    cont.innerHTML = '<p style="color:#888;">No hay servicios disponibles por ahora.</p>';
+                    return;
+                }
+                cont.innerHTML = servicios.map(s => `
+                    <div class="servicio-card">
+                        <h4>${escaparHtml(s.nombre)}</h4>
+                        <span class="sc-cat">${escaparHtml(s.categoria || 'General')}</span>
+                        <span class="sc-desc">${escaparHtml(s.descripcion || '')}</span>
+                        <span class="sc-precio">${formatearPrecio(s.precio)}</span>
+                        <button type="button" onclick="elegirServicio(${s.id}, '${escaparAttr(s.nombre)}', '${escaparAttr(s.categoria || '')}')">Pedir cita</button>
+                    </div>
+                `).join('');
+            } catch (err) {
+                cont.innerHTML = '<p style="color:#dc2626;">Error al cargar los servicios.</p>';
+            }
+        }
+
+        function cerrarCatalogoServicios() {
+            modalServicios.classList.remove('activo');
+        }
+        modalServicios.addEventListener('click', (e) => {
+            if (e.target === modalServicios) cerrarCatalogoServicios();
+        });
+
+        function elegirServicio(id, nombre, categoria) {
+            servicioSeleccionadoId = id;
+            cerrarCatalogoServicios();
+            abrirModalReparacion();
+            document.getElementById('repServicioNombre').textContent = nombre;
+            // Sugerimos el tipo de dispositivo según la categoría del servicio
+            if (categoria === 'Teléfono' || categoria === 'Computador') {
+                document.getElementById('repTipo').value = categoria;
+            }
+        }
+
+        function escaparHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function escaparAttr(s) { return escaparHtml(s); }
+        function formatearPrecio(n) {
+            return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Number(n) || 0);
+        }
+
+        function abrirModalReparacion() {
+            mensaje.textContent = '';
+            mensaje.className = 'modal-mensaje';
+            form.reset();
+            reiniciarModelos('repModelo');
+            modal.classList.add('activo');
+            setTimeout(() => document.getElementById('repTipo').focus(), 100);
+        }
+
+        function cerrarModalReparacion() {
+            modal.classList.remove('activo');
+        }
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) cerrarModalReparacion();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('activo')) {
+                cerrarModalReparacion();
+            }
+        });
+
+        // ====== Submit del formulario (VALIDACIÓN REFORZADA) ======
+        form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // 1. Obtener valores directamente
+        const tipoInput = document.getElementById('repTipo').value.trim();
+        const marca = document.getElementById('repMarca').value.trim();
+        const modelo = document.getElementById('repModelo').value.trim();
+        const descripcion = document.getElementById('repDescripcion').value.trim();
+
+        // 2. Validación
+        if (tipoInput === "") {
+            mensaje.textContent = 'El tipo de dispositivo es obligatorio.';
+            mensaje.className = 'modal-mensaje error';
+            document.getElementById('repTipo').focus();
+            return;
+        }
+        if (marca === "") {
+            mensaje.textContent = 'La marca es obligatoria.';
+            mensaje.className = 'modal-mensaje error';
+            return;
+        }
+        if (modelo === "") {
+            mensaje.textContent = 'El modelo es obligatorio.';
+            mensaje.className = 'modal-mensaje error';
+            return;
+        }
+        if (descripcion.length < 15) {
+            mensaje.textContent = 'La descripción debe tener al menos 15 caracteres.';
+            mensaje.className = 'modal-mensaje error';
+            return;
+        }
+        if (!servicioSeleccionadoId) {
+            mensaje.textContent = 'Primero elige un servicio del catálogo.';
+            mensaje.className = 'modal-mensaje error';
+            return;
+        }
+
+        // 3. Envío
+        btnEnviar.disabled = true;
+        const textoOriginal = btnEnviar.innerHTML;
+        btnEnviar.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Enviando...`;
+        
+        try {
+            const res = await fetch('/api/reparaciones', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    usuario_id: usuarioCliente.id,
+                    servicio_id: servicioSeleccionadoId,
+                    tipo: tipoInput, // Usamos la variable que definimos arriba
+                    marca,
+                    modelo,
+                    descripcion
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                console.log('Reparacion creada:', data);
+                mensaje.textContent = `✓ Solicitud enviada (ID #${data.id})`;
+                mensaje.className = 'modal-mensaje ok';
+                form.reset();
+                // Guardamos el id para forzar refresco / destacar en la página de reparaciones
+                try { sessionStorage.setItem('nuevaReparacionId', String(data.id)); } catch (e) { /* noop */ }
+                setTimeout(() => {
+                    cerrarModalReparacion();
+                    window.location.href = 'reparacionesCliente.html';
+                }, 1200);
+            } else {
+                throw new Error(data.error || 'Error al enviar');
+            }
+        } catch (err) {
+            mensaje.textContent = err.message || 'Error de conexión.';
+            mensaje.className = 'modal-mensaje error';
+            btnEnviar.disabled = false;
+            btnEnviar.innerHTML = textoOriginal;
+        }
+    });
+    </script>
+</body>
+</html>

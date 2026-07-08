@@ -181,8 +181,13 @@ form {
     align-items: center;
     z-index: 15;
     transition: 0.6s ease-in-out;
-    pointer-events: all; /* Los botones de los paneles deben ser clickeables */
+    
 }
+
+.toggle-panel .btn {
+    pointer-events: all;
+}
+
 
 .toggle-panel h1 {
     color: #fff;

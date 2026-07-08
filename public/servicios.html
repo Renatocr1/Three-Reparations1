@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three Reparations - Servicios</title>
+
+    <link rel="stylesheet" href="styleadmin.css">
+    <link rel="icon" type="png" href="Imagenes/logo_three.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <!-- PROTECCIÓN: solo admins -->
+    <script>
+        const usuario = JSON.parse(sessionStorage.getItem('usuario'));
+        if (!usuario || usuario.rol !== 'admin') {
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <style>
+        /* Modal (mismo estilo que el resto del proyecto) */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-overlay.activo { display: flex; }
+        .modal-ventana { background: #fff; border-radius: 16px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px rgba(0,0,0,.25); overflow: hidden; font-family: 'Montserrat', sans-serif; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; background: linear-gradient(135deg,#7494ec,#5a7bd4); color: #fff; }
+        .modal-header h2 { font-size: 17px; margin: 0; }
+        .modal-cerrar { background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+        .modal-cuerpo { padding: 22px 24px; }
+        .modal-cuerpo .campo { margin-bottom: 15px; }
+        .modal-cuerpo label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px; }
+        .modal-cuerpo input, .modal-cuerpo textarea, .modal-cuerpo select { width: 100%; padding: 10px 13px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; box-sizing: border-box; outline: none; }
+        .modal-cuerpo input:focus, .modal-cuerpo textarea:focus, .modal-cuerpo select:focus { border-color: #7494ec; }
+        .dos-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+        .modal-footer { display: flex; gap: 10px; justify-content: flex-end; padding: 0 24px 22px; }
+        .btn-modal { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; }
+        .btn-modal.secundario { background: #f1f1f1; color: #555; }
+        .btn-modal.primario { background: #7494ec; color: #fff; }
+        .modal-msg { padding: 0 24px 12px; font-size: 13px; font-weight: 500; min-height: 18px; }
+        .modal-msg.error { color: #dc2626; }
+        .badge-estado { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .badge-estado.activo { background: #d1fae5; color: #047857; }
+        .badge-estado.inactivo { background: #f1f1f4; color: #6b7280; }
+        .btn-mini { padding: 6px 11px; border-radius: 7px; border: 1px solid #e0e0e0; background: #fff; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; color: #444; }
+        .btn-mini:hover { background: #f5f5f5; }
+        .btn-nuevo { display: inline-flex; align-items: center; gap: 6px; background: #7494ec; color: #fff; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; font-size: 14px; }
+        .btn-nuevo:hover { background: #5a7bd4; }
+    </style>
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="Imagenes/logo_three.png" alt="Logo">
+            <span>Three Reparations</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-title">Principal</li>
+            <li class="menu-item"><a href="admin.html" class="menu-link"><i class='bx bx-home-alt'></i><span>Inicio</span></a></li>
+            <li class="menu-item"><a href="reparaciones.html" class="menu-link"><i class='bx bx-wrench'></i><span>Reparaciones</span></a></li>
+            <li class="menu-item"><a href="servicios.html" class="menu-link active"><i class='bx bx-list-ul'></i><span>Servicios</span></a></li>
+            <li class="menu-item"><a href="clientes.html" class="menu-link"><i class='bx bx-group'></i><span>Clientes</span></a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar" id="avatar"></div>
+                <div class="sidebar-user-info">
+                    <h4 id="nombreSidebar"></h4>
+                    <p>Administrador</p>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="cerrarSesion()"><i class='bx bx-log-out'></i> Cerrar sesión</button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <div class="topbar">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <button class="menu-toggle" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
+                <div class="topbar-title">
+                    <h1>Catálogo de servicios</h1>
+                    <p>Gestiona los servicios que ofrece el taller</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabla-card">
+            <div class="tabla-header">
+                <h2><i class='bx bx-list-ul'></i> Servicios</h2>
+                <button class="btn-nuevo" onclick="abrirModalServicio()"><i class='bx bx-plus'></i> Nuevo servicio</button>
+            </div>
+            <div class="tabla-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Servicio</th><th>Categoría</th><th>Precio</th><th>Días</th><th>Estado</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaServicios">
+                        <tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Cargando servicios...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL alta/edición -->
+    <div class="modal-overlay" id="modalServicio">
+        <div class="modal-ventana">
+            <div class="modal-header">
+                <h2 id="modalTitulo">Nuevo servicio</h2>
+                <button class="modal-cerrar" type="button" onclick="cerrarModalServicio()"><i class='bx bx-x'></i></button>
+            </div>
+            <form id="formServicio">
+                <div class="modal-cuerpo">
+                    <input type="hidden" id="servId">
+                    <div class="campo">
+                        <label for="servNombre">Nombre *</label>
+                        <input type="text" id="servNombre" maxlength="150">
+                    </div>
+                    <div class="campo">
+                        <label for="servDescripcion">Descripción</label>
+                        <textarea id="servDescripcion" rows="2"></textarea>
+                    </div>
+                    <div class="dos-col">
+                        <div class="campo">
+                            <label for="servCategoria">Categoría</label>
+                            <select id="servCategoria">
+                                <option value="General">General</option>
+                                <option value="Teléfono">Teléfono</option>
+                                <option value="Computador">Computador</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label for="servPrecio">Precio (CLP) *</label>
+                            <input type="number" id="servPrecio" min="0">
+                        </div>
+                    </div>
+                    <div class="campo">
+                        <label for="servDias">Días estimados</label>
+                        <input type="number" id="servDias" min="0" value="1">
+                    </div>
+                </div>
+                <div class="modal-msg" id="servMsg"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal secundario" onclick="cerrarModalServicio()">Cancelar</button>
+                    <button type="submit" class="btn-modal primario">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="ui-feedback.js"></script>
+    <script>
+        document.getElementById('avatar').textContent = usuario.nombre.charAt(0).toUpperCase();
+        document.getElementById('nombreSidebar').textContent = usuario.nombre;
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        async function cerrarSesion() {
+            try { await fetch('/api/logout', { method: 'POST' }); } catch (e) {}
+            sessionStorage.removeItem('usuario');
+            window.location.href = 'index.html';
+        }
+
+        function escaparHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function formatearPrecio(n) {
+            return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Number(n) || 0);
+        }
+
+        const modal = document.getElementById('modalServicio');
+        const form = document.getElementById('formServicio');
+        const msg = document.getElementById('servMsg');
+
+        async function cargarServicios() {
+            const tbody = document.getElementById('tablaServicios');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Cargando...</td></tr>';
+            try {
+                const res = await fetch('/api/servicios?todos=1');
+                const servicios = await res.json();
+                if (!Array.isArray(servicios) || servicios.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">No hay servicios.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = servicios.map(s => `
+                    <tr>
+                        <td><b>${escaparHtml(s.nombre)}</b><br><small style="color:#888;">${escaparHtml(s.descripcion || '')}</small></td>
+                        <td>${escaparHtml(s.categoria || 'General')}</td>
+                        <td>${formatearPrecio(s.precio)}</td>
+                        <td>${s.dias_estimados}</td>
+                        <td><span class="badge-estado ${s.activo ? 'activo' : 'inactivo'}">${s.activo ? 'Activo' : 'Inactivo'}</span></td>
+                        <td>
+                            <button class="btn-mini" onclick='editarServicio(${JSON.stringify(s)})'>Editar</button>
+                            <button class="btn-mini" onclick="cambiarActivo(${s.id}, ${s.activo ? 0 : 1})">${s.activo ? 'Desactivar' : 'Activar'}</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#dc2626;">Error al cargar servicios.</td></tr>';
+            }
+        }
+
+        function abrirModalServicio() {
+            form.reset();
+            document.getElementById('servId').value = '';
+            document.getElementById('modalTitulo').textContent = 'Nuevo servicio';
+            document.getElementById('servDias').value = '1';
+            msg.textContent = '';
+            modal.classList.add('activo');
+        }
+
+        function editarServicio(s) {
+            form.reset();
+            document.getElementById('servId').value = s.id;
+            document.getElementById('modalTitulo').textContent = 'Editar servicio';
+            document.getElementById('servNombre').value = s.nombre;
+            document.getElementById('servDescripcion').value = s.descripcion || '';
+            document.getElementById('servCategoria').value = s.categoria || 'General';
+            document.getElementById('servPrecio').value = s.precio;
+            document.getElementById('servDias').value = s.dias_estimados;
+            msg.textContent = '';
+            modal.classList.add('activo');
+        }
+
+        function cerrarModalServicio() { modal.classList.remove('activo'); }
+        modal.addEventListener('click', (e) => { if (e.target === modal) cerrarModalServicio(); });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('servId').value;
+            const nombre = document.getElementById('servNombre').value.trim();
+            const precio = document.getElementById('servPrecio').value;
+            if (!nombre) { msg.textContent = 'El nombre es obligatorio.'; msg.className = 'modal-msg error'; return; }
+            if (precio === '' || Number(precio) < 0) { msg.textContent = 'Precio inválido.'; msg.className = 'modal-msg error'; return; }
+
+            const cuerpo = {
+                nombre,
+                descripcion: document.getElementById('servDescripcion').value.trim(),
+                categoria: document.getElementById('servCategoria').value,
+                precio: Number(precio),
+                dias_estimados: Number(document.getElementById('servDias').value) || 1
+            };
+            try {
+                const url = id ? `/api/servicios/${id}` : '/api/servicios';
+                const res = await fetch(url, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cuerpo)
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Error al guardar');
+                cerrarModalServicio();
+                mostrarToast('Servicio guardado', 'ok');
+                cargarServicios();
+            } catch (err) {
+                msg.textContent = err.message; msg.className = 'modal-msg error';
+                mostrarToast(err.message || 'Error al guardar', 'error');
+            }
+        });
+
+        async function cambiarActivo(id, nuevo) {
+            const ok = await confirmarAccion({
+                titulo: nuevo ? 'Activar servicio' : 'Desactivar servicio',
+                mensaje: '¿Confirmas ' + (nuevo ? 'activar' : 'desactivar') + ' este servicio?',
+                textoConfirmar: 'Sí'
+            });
+            if (!ok) return;
+            try {
+                await fetch(`/api/servicios/${id}/activo`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ activo: nuevo })
+                });
+                mostrarToast('Servicio ' + (nuevo ? 'activado' : 'desactivado'), 'ok');
+                cargarServicios();
+            } catch (err) { mostrarToast('Error al cambiar estado del servicio', 'error'); }
+        }
+
+        cargarServicios();
+    </script>
+</body>
+
+</html>

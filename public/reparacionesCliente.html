@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis reparaciones - Three Reparations</title>
+
+    <!-- PROTECCIÓN: solo clientes pueden entrar aquí -->
+    <script>
+        const usuarioCliente = JSON.parse(sessionStorage.getItem('usuario'));
+        if (!usuarioCliente) {
+            window.location.href = 'index.html';
+        } else if (usuarioCliente.rol === 'admin') {
+            window.location.href = 'admin.html';
+        }
+    </script>
+
+    <link rel="stylesheet" href="cliente.css">
+    <link rel="website icon" type="png" href="Imagenes/Three reparations.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="png" href="Imagenes/logo_three.png">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <style>
+        /* ===== Encabezado ===== */
+        .pedidos-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pedidos-header h1 {
+            font-size: 24px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .btn-nuevo {
+            background: #7494ec;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .2s;
+            text-decoration: none;
+        }
+
+        .btn-nuevo:hover { background: #5a7bd4; }
+
+        /* ===== Buscador ===== */
+        .toolbar {
+            margin-bottom: 18px;
+        }
+
+        .buscador {
+            position: relative;
+            max-width: 460px;
+        }
+
+        .buscador i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        .buscador input {
+            width: 100%;
+            padding: 11px 14px 11px 42px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #334155;
+            background: #fff;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .buscador input:focus {
+            border-color: #7494ec;
+            box-shadow: 0 0 0 3px rgba(116, 148, 236, .15);
+        }
+
+        /* ===== Tabla ===== */
+        .tabla-wrap {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+
+        .tabla {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .tabla thead { background: #f8fafc; }
+
+        .tabla thead th {
+            text-align: left;
+            padding: 14px 16px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .tabla tbody tr {
+            border-top: 1px solid #f1f5f9;
+            transition: background .15s;
+        }
+
+        .tabla tbody tr.fila-reparacion { cursor: pointer; }
+        .tabla tbody tr.fila-reparacion:hover { background: #fafbff; }
+
+        .tabla tbody td {
+            padding: 14px 16px;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        .tabla .id {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .ver-link {
+            color: #7494ec;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            margin-top: 2px;
+        }
+
+        /* Estado: badge */
+        .estado {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+
+        .estado .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .estado.pendiente      { background: #fef3c7; color: #b45309; border-color: #fde68a; }
+        .estado.en_diagnostico { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+        .estado.en_reparacion  { background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
+        .estado.finalizado     { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+        .estado.entregado      { background: #d1fae5; color: #047857; border-color: #a7f3d0; }
+
+        .vacio {
+            padding: 40px 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .vacio i {
+            font-size: 42px;
+            color: #cbd5e1;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* ====== Modal "Solicitar reparación" (ampliado, igual que cliente.html) ====== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.activo { display: flex; opacity: 1; }
+
+        .modal-ventana {
+            background: #fff;
+            border-radius: 16px;
+            width: 94vw;
+            max-width: 640px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.25s ease;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .modal-overlay.activo .modal-ventana { transform: scale(1) translateY(0); }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #7494ec, #5a7bd4);
+            color: #fff;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .modal-cerrar {
+            background: transparent; border: none; color: #fff;
+            font-size: 24px; cursor: pointer;
+            width: 32px; height: 32px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .modal-cerrar:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .modal-cuerpo { padding: 28px 30px; }
+        .modal-cuerpo .campo { margin-bottom: 20px; }
+
+        .campo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px 18px;
+            margin-bottom: 20px;
+        }
+        .campo-grid .campo { margin-bottom: 0; }
+
+        @media (max-width: 560px) {
+            .campo-grid { grid-template-columns: 1fr; }
+            .modal-cuerpo { padding: 22px 20px; }
+        }
+
+        .modal-cuerpo label {
+            display: block; font-size: 13.5px; font-weight: 600;
+            color: #3a3a3a; margin-bottom: 7px;
+        }
+        .modal-cuerpo input,
+        .modal-cuerpo textarea,
+        .modal-cuerpo select {
+            width: 100%; padding: 12px 15px;
+            border: 1.5px solid #e0e0e0; border-radius: 9px;
+            font-size: 14.5px; font-family: inherit; color: #333;
+            outline: none; box-sizing: border-box; background: #fafbff;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .modal-cuerpo input:focus,
+        .modal-cuerpo textarea:focus,
+        .modal-cuerpo select:focus {
+            border-color: #7494ec;
+            box-shadow: 0 0 0 3px rgba(116, 148, 236, 0.15);
+            background: #fff;
+        }
+        .modal-cuerpo textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
+
+        .servicio-elegido {
+            padding: 12px 15px; border-radius: 9px;
+            background: #eef2ff; color: #4863b8;
+            font-weight: 600; font-size: 14px;
+        }
+
+        .modal-footer {
+            display: flex; gap: 10px;
+            justify-content: flex-end;
+            padding: 15px 25px 25px;
+        }
+
+        .btn-modal {
+            padding: 10px 22px; border-radius: 8px;
+            font-size: 14px; font-weight: 600;
+            cursor: pointer; border: none;
+            font-family: inherit; transition: .2s;
+        }
+        .btn-modal.secundario { background: #f1f1f1; color: #555; }
+        .btn-modal.secundario:hover { background: #e5e5e5; }
+        .btn-modal.primario {
+            background: #7494ec; color: #fff;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-modal.primario:hover { background: #5a7bd4; }
+        .btn-modal.primario:disabled { opacity: .6; cursor: not-allowed; }
+
+        .modal-mensaje { padding: 0 30px 15px; min-height: 20px; font-size: 13px; font-weight: 500; }
+        .modal-mensaje.ok { color: #0f9d58; }
+        .modal-mensaje.error { color: #dc2626; }
+
+        /* Catálogo de servicios */
+        .catalogo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 14px; max-height: 60vh; overflow-y: auto; }
+        .servicio-card { border: 1.5px solid #e6e6e6; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+        .servicio-card:hover { border-color: #7494ec; box-shadow: 0 6px 16px rgba(116,148,236,.15); }
+        .servicio-card h4 { margin: 0; font-size: 15px; color: #333; }
+        .servicio-card .sc-cat { font-size: 12px; color: #888; }
+        .servicio-card .sc-desc { font-size: 13px; color: #555; flex: 1; }
+        .servicio-card .sc-precio { font-weight: 700; color: #4863b8; }
+        .servicio-card button { margin-top: 6px; background: #7494ec; color: #fff; border: none; padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; font-size: 13px; }
+        .servicio-card button:hover { background: #5a7bd4; }
+    </style>
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="cliente.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;">
+                <img src="Imagenes/logo_three.png" alt="Logo">
+                <span>Three Reparations</span>
+            </a>
+        </div>
+
+        <div class="navbar-user">
+            <div class="user-info">
+                <div class="user-avatar" id="avatar"></div>
+                <span id="nombreNavbar"></span>
+            </div>
+            <button class="btn-logout" onclick="cerrarSesion()">
+                <i class='bx bx-log-out'></i>
+                Cerrar sesión
+            </button>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO -->
+    <div class="container">
+
+        <div class="pedidos-header">
+            <h1><i class='bx bx-wrench'></i> Mis reparaciones</h1>
+            <button class="btn-nuevo" id="btnNuevaReparacion">
+                <i class='bx bx-plus'></i>
+                Solicitar reparación
+            </button>
+        </div>
+
+        <!-- Buscador -->
+        <div class="toolbar">
+            <div class="buscador">
+                <i class='bx bx-search'></i>
+                <input type="search" id="buscarReparacion" placeholder="Buscar por ID, dispositivo, estado o problema...">
+            </div>
+        </div>
+
+        <div class="tabla-wrap">
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">ID</th>
+                        <th style="width: 220px;">Dispositivo</th>
+                        <th>Causa de reparación</th>
+                        <th style="width: 150px;">Estado</th>
+                        <th style="width: 130px;">Total</th>
+                        <th style="width: 150px;">Fecha</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBody">
+                    <tr>
+                        <td colspan="6" class="vacio">Cargando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODAL: Solicitar reparación                  -->
+    <!-- ============================================ -->
+    <div class="modal-overlay" id="modalReparacion">
+        <div class="modal-ventana">
+            <div class="modal-header">
+                <h2><i class='bx bx-wrench'></i> Solicitar reparación</h2>
+                <button class="modal-cerrar" type="button" onclick="cerrarModalReparacion()">
+                    <i class='bx bx-x'></i>
+                </button>
+            </div>
+
+            <form id="formReparacion" novalidate>
+                <div class="modal-cuerpo">
+                    <div class="campo">
+                        <label>Servicio solicitado</label>
+                        <div id="repServicioNombre" class="servicio-elegido">—</div>
+                    </div>
+
+                    <div class="campo-grid">
+                        <div class="campo">
+                            <label for="repTipo">Tipo de dispositivo *</label>
+                            <input type="text" id="repTipo" placeholder="Ej: Computador, Teléfono, Tablet...">
+                        </div>
+                        <div class="campo">
+                            <label for="repMarca">Marca *</label>
+                            <select id="repMarca"><option value="">Selecciona una marca…</option></select>
+                        </div>
+                        <div class="campo">
+                            <label for="repModelo">Modelo *</label>
+                            <select id="repModelo" disabled><option value="">Elige primero una marca…</option></select>
+                        </div>
+                    </div>
+
+                    <div class="campo">
+                        <label for="repDescripcion">Descripción del problema *</label>
+                        <textarea id="repDescripcion" placeholder="Cuéntanos qué le pasa..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-mensaje" id="modalMensaje"></div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal secundario" onclick="cerrarModalReparacion()">Cancelar</button>
+                    <button type="submit" class="btn-modal primario" id="btnEnviarReparacion">
+                        <i class='bx bx-send'></i> Enviar solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: catálogo de servicios (elegir antes de pedir cita) -->
+    <div class="modal-overlay" id="modalServicios">
+        <div class="modal-ventana" style="max-width: 660px;">
+            <div class="modal-header">
+                <h2><i class='bx bx-list-ul'></i> Elige un servicio</h2>
+                <button class="modal-cerrar" type="button" onclick="cerrarCatalogoServicios()"><i class='bx bx-x'></i></button>
+            </div>
+            <div class="modal-cuerpo">
+                <p style="font-size:14px;color:#555;margin:0 0 16px;">Selecciona el servicio que necesitas para iniciar tu solicitud.</p>
+                <div id="catalogoServicios" class="catalogo-grid"><p style="color:#888;">Cargando servicios...</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: detalle de la reparación (con diagnóstico) para el cliente -->
+    <div class="modal-overlay" id="modalDetalleCliente">
+        <div class="modal-ventana" style="max-width: 560px;">
+            <div class="modal-header">
+                <h2><i class='bx bx-wrench'></i> Detalle de la reparación <span id="dc-id"></span></h2>
+                <button class="modal-cerrar" type="button" onclick="cerrarDetalleCliente()"><i class='bx bx-x'></i></button>
+            </div>
+            <div class="modal-cuerpo" style="max-height:70vh;overflow-y:auto;">
+                <p style="margin:4px 0;font-size:14px;"><strong>Servicio:</strong> <span id="dc-servicio">—</span></p>
+                <p style="margin:4px 0;font-size:14px;"><strong>Dispositivo:</strong> <span id="dc-dispositivo">—</span></p>
+                <p style="margin:4px 0;font-size:14px;"><strong>Estado:</strong> <span id="dc-estado">—</span></p>
+                <p style="margin:4px 0 14px;font-size:14px;"><strong>Problema:</strong> <span id="dc-descripcion">—</span></p>
+                <div id="dc-diagnostico-box" style="padding:14px;background:#f7f9fd;border:1px solid #e6e6e6;border-radius:10px;">
+                    <h4 style="margin:0 0 8px;font-size:14px;">Diagnóstico del técnico</h4>
+                    <div id="dc-diagnostico" style="font-size:13px;color:#444;">El técnico aún no ha registrado un diagnóstico.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal secundario" onclick="cerrarDetalleCliente()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        © 2026 Three Reparations · Todos los derechos reservados
+    </footer>
+
+    <script src="marcas.js"></script>
+    <script>
+        // ====== Datos del usuario ======
+        const nombre = usuarioCliente.nombre;
+        const inicial = nombre.charAt(0).toUpperCase();
+        document.getElementById('avatar').textContent = inicial;
+        document.getElementById('nombreNavbar').textContent = nombre;
+
+        async function cerrarSesion() {
+            try { await fetch('/api/logout', { method: 'POST' }); } catch (e) { /* noop */ }
+            sessionStorage.removeItem('usuario');
+            window.location.href = 'index.html';
+        }
+
+        // ====== Estado de la página ======
+        let REPARACIONES = [];
+        let BUSQUEDA = '';
+
+        // ====== Helpers ======
+        const ESTADO_LABELS = {
+            pendiente:      'Pendiente',
+            en_diagnostico: 'En diagnóstico',
+            en_reparacion:  'En reparación',
+            finalizado:     'Finalizado',
+            entregado:      'Entregado'
+        };
+
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str).replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        function formatearTotal(t) {
+            if (t === null || t === undefined || t === '') {
+                return '<span style="color:#94a3b8;font-style:italic;">Por cotizar</span>';
+            }
+            const num = Number(t);
+            if (isNaN(num)) return '—';
+            return new Intl.NumberFormat('es-CL', {
+                style: 'currency', currency: 'CLP', maximumFractionDigits: 0
+            }).format(num);
+        }
+
+        function formatearFecha(ts) {
+            if (!ts) return '—';
+            const fecha = new Date(ts);
+            if (isNaN(fecha.getTime())) return '—';
+            const hoy = new Date();
+            const ayer = new Date(); ayer.setDate(hoy.getDate() - 1);
+            const hh = String(fecha.getHours()).padStart(2, '0');
+            const mm = String(fecha.getMinutes()).padStart(2, '0');
+            const mismaFecha = (a, b) =>
+                a.getFullYear() === b.getFullYear() &&
+                a.getMonth() === b.getMonth() &&
+                a.getDate() === b.getDate();
+            if (mismaFecha(fecha, hoy))  return `Hoy ${hh}:${mm}`;
+            if (mismaFecha(fecha, ayer)) return `Ayer ${hh}:${mm}`;
+            const d = String(fecha.getDate()).padStart(2, '0');
+            const m = String(fecha.getMonth() + 1).padStart(2, '0');
+            return `${d}/${m}/${fecha.getFullYear()}`;
+        }
+
+        // ====== Renderizado ======
+        function construirFilas() {
+            const repArr = Array.isArray(REPARACIONES) ? REPARACIONES : [];
+            return repArr.map(r => ({
+                id: r.id ?? '—',
+                dispositivo: r.equipo || `${r.marca || ''} ${r.modelo || ''}`.trim() || '—',
+                causa: r.descripcion || '—',
+                estado: r.estado || 'pendiente',
+                total: r.total,
+                fecha: r.creado_en
+            })).sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
+        }
+
+        function coincideBusqueda(f) {
+            if (!BUSQUEDA) return true;
+            const q = BUSQUEDA;
+            const estadoLabel = (ESTADO_LABELS[f.estado] || f.estado || '').toLowerCase();
+            return String(f.id).toLowerCase().includes(q)
+                || String(f.dispositivo).toLowerCase().includes(q)
+                || String(f.causa).toLowerCase().includes(q)
+                || estadoLabel.includes(q);
+        }
+
+        function render() {
+            const tbody = document.getElementById('tablaBody');
+            const filas = construirFilas().filter(coincideBusqueda);
+
+            if (filas.length === 0) {
+                const texto = BUSQUEDA
+                    ? 'Sin resultados para tu búsqueda.'
+                    : 'Aún no tienes reparaciones. Crea una con el botón "Solicitar reparación".';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="vacio">
+                            <i class='bx bx-wrench'></i>
+                            ${texto}
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filas.map(f => {
+                const estadoLabel = ESTADO_LABELS[f.estado] || f.estado || '—';
+                const estadoCls = f.estado || '';
+                return `
+                    <tr class="fila-reparacion" onclick="verDetalleReparacion(${f.id})" title="Ver detalle y diagnóstico">
+                        <td class="id">#${f.id}</td>
+                        <td><strong>${escapeHtml(f.dispositivo)}</strong></td>
+                        <td>${escapeHtml(f.causa)}</td>
+                        <td>
+                            <span class="estado ${estadoCls}">
+                                <span class="dot"></span>
+                                ${escapeHtml(estadoLabel)}
+                            </span>
+                        </td>
+                        <td>${formatearTotal(f.total)}</td>
+                        <td>
+                            ${formatearFecha(f.fecha)}
+                            <div class="ver-link"><i class='bx bx-show'></i> Ver detalle</div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ====== Carga desde el backend ======
+        async function cargarTodo() {
+            if (!usuarioCliente || !usuarioCliente.id) return;
+            try {
+                const resRep = await fetch(`/api/reparaciones/usuario/${usuarioCliente.id}`);
+                if (resRep.ok) {
+                    const datos = await resRep.json();
+                    REPARACIONES = Array.isArray(datos) ? datos : [];
+                } else {
+                    console.error('ERROR al traer reparaciones:', await resRep.text());
+                }
+            } catch (err) {
+                console.error('Error crítico en fetch:', err);
+            }
+            render();
+        }
+
+        // ====== Buscador ======
+        document.getElementById('buscarReparacion').addEventListener('input', (e) => {
+            BUSQUEDA = e.target.value.trim().toLowerCase();
+            render();
+        });
+
+        // ====== Modal solicitar reparación ======
+        const modal = document.getElementById('modalReparacion');
+        const form  = document.getElementById('formReparacion');
+        const mensaje  = document.getElementById('modalMensaje');
+        const btnEnviar = document.getElementById('btnEnviarReparacion');
+
+        document.getElementById('btnNuevaReparacion').addEventListener('click', abrirCatalogoServicios);
+
+        const modalServicios = document.getElementById('modalServicios');
+        let servicioSeleccionadoId = null;
+        inicializarMarcasModelos('repMarca', 'repModelo');
+        const _clp = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
+
+        async function abrirCatalogoServicios() {
+            modalServicios.classList.add('activo');
+            const cont = document.getElementById('catalogoServicios');
+            cont.innerHTML = '<p style="color:#888;">Cargando servicios...</p>';
+            try {
+                const res = await fetch('/api/servicios');
+                const servicios = await res.json();
+                if (!Array.isArray(servicios) || servicios.length === 0) {
+                    cont.innerHTML = '<p style="color:#888;">No hay servicios disponibles.</p>'; return;
+                }
+                cont.innerHTML = servicios.map(s => `
+                    <div class="servicio-card">
+                        <h4>${escapeHtml(s.nombre)}</h4>
+                        <span class="sc-cat">${escapeHtml(s.categoria || 'General')}</span>
+                        <span class="sc-desc">${escapeHtml(s.descripcion || '')}</span>
+                        <span class="sc-precio">${_clp.format(Number(s.precio) || 0)}</span>
+                        <button type="button" onclick="elegirServicio(${s.id}, '${escapeHtml(s.nombre)}', '${escapeHtml(s.categoria || '')}')">Pedir cita</button>
+                    </div>`).join('');
+            } catch (err) { cont.innerHTML = '<p style="color:#dc2626;">Error al cargar los servicios.</p>'; }
+        }
+        function cerrarCatalogoServicios() { modalServicios.classList.remove('activo'); }
+        modalServicios.addEventListener('click', (e) => { if (e.target === modalServicios) cerrarCatalogoServicios(); });
+        function elegirServicio(id, nombre, categoria) {
+            servicioSeleccionadoId = id;
+            cerrarCatalogoServicios();
+            abrirModalReparacion();
+            document.getElementById('repServicioNombre').textContent = nombre;
+            if (categoria === 'Teléfono' || categoria === 'Computador') document.getElementById('repTipo').value = categoria;
+        }
+
+        function abrirModalReparacion() {
+            mensaje.textContent = '';
+            mensaje.className = 'modal-mensaje';
+            form.reset();
+            reiniciarModelos('repModelo');
+            modal.classList.add('activo');
+            setTimeout(() => document.getElementById('repTipo').focus(), 100);
+        }
+
+        function cerrarModalReparacion() {
+            modal.classList.remove('activo');
+        }
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) cerrarModalReparacion();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('activo')) cerrarModalReparacion();
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const tipoInput = document.getElementById('repTipo').value.trim();
+            const marca = document.getElementById('repMarca').value.trim();
+            const modelo = document.getElementById('repModelo').value.trim();
+            const descripcion = document.getElementById('repDescripcion').value.trim();
+
+            if (tipoInput === "") {
+                mensaje.textContent = 'El tipo de dispositivo es obligatorio.';
+                mensaje.className = 'modal-mensaje error';
+                document.getElementById('repTipo').focus();
+                return;
+            }
+            if (marca === "") {
+                mensaje.textContent = 'La marca es obligatoria.';
+                mensaje.className = 'modal-mensaje error';
+                return;
+            }
+            if (modelo === "") {
+                mensaje.textContent = 'El modelo es obligatorio.';
+                mensaje.className = 'modal-mensaje error';
+                return;
+            }
+            if (descripcion.length < 15) {
+                mensaje.textContent = 'La descripción debe tener al menos 15 caracteres.';
+                mensaje.className = 'modal-mensaje error';
+                return;
+            }
+            if (!servicioSeleccionadoId) {
+                mensaje.textContent = 'Primero elige un servicio del catálogo.';
+                mensaje.className = 'modal-mensaje error';
+                return;
+            }
+
+            btnEnviar.disabled = true;
+            const textoOriginal = btnEnviar.innerHTML;
+            btnEnviar.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Enviando...`;
+            mensaje.textContent = '';
+            mensaje.className = 'modal-mensaje';
+
+            try {
+                const res = await fetch('/api/reparaciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        usuario_id: usuarioCliente.id,
+                        servicio_id: servicioSeleccionadoId,
+                        tipo: tipoInput,
+                        marca,
+                        modelo,
+                        descripcion
+                    })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    mensaje.textContent = `✓ Solicitud enviada (ID #${data.id})`;
+                    mensaje.className = 'modal-mensaje ok';
+                    form.reset();
+                    await cargarTodo();
+                    resaltarFila(data.id);
+                    setTimeout(() => cerrarModalReparacion(), 1200);
+                } else {
+                    mensaje.textContent = data.error || `Error ${res.status}`;
+                    mensaje.className = 'modal-mensaje error';
+                }
+            } catch (err) {
+                console.error(err);
+                mensaje.textContent = 'No se pudo conectar con el servidor.';
+                mensaje.className = 'modal-mensaje error';
+            } finally {
+                btnEnviar.disabled = false;
+                btnEnviar.innerHTML = textoOriginal;
+            }
+        });
+
+        function resaltarFila(nuevaId) {
+            try {
+                const tds = Array.from(document.querySelectorAll('.tabla tbody tr td.id'));
+                const td = tds.find(x => x.textContent.trim() === `#${nuevaId}`);
+                if (td) {
+                    const tr = td.closest('tr');
+                    tr.style.transition = 'background 0.4s';
+                    tr.style.background = '#fffbdd';
+                    setTimeout(() => tr.style.background = '', 3000);
+                }
+            } catch (e) { /* ignore DOM errors */ }
+        }
+
+        // ====== Detalle de reparación con diagnóstico (cliente) ======
+        const modalDetalleCliente = document.getElementById('modalDetalleCliente');
+        function cerrarDetalleCliente() { modalDetalleCliente.classList.remove('activo'); }
+        modalDetalleCliente.addEventListener('click', (e) => { if (e.target === modalDetalleCliente) cerrarDetalleCliente(); });
+
+        async function verDetalleReparacion(id) {
+            document.getElementById('dc-id').textContent = '#' + id;
+            document.getElementById('dc-servicio').textContent = '—';
+            document.getElementById('dc-dispositivo').textContent = '—';
+            document.getElementById('dc-estado').textContent = '—';
+            document.getElementById('dc-descripcion').textContent = '—';
+            document.getElementById('dc-diagnostico').textContent = 'El técnico aún no ha registrado un diagnóstico.';
+            modalDetalleCliente.classList.add('activo');
+            try {
+                const res = await fetch(`/api/reparaciones/${id}`);
+                if (res.ok) {
+                    const r = await res.json();
+                    document.getElementById('dc-servicio').textContent = r.servicio_nombre || '—';
+                    document.getElementById('dc-dispositivo').textContent = `${r.marca || ''} ${r.modelo || ''}`.trim() || (r.equipo || '—');
+                    document.getElementById('dc-estado').textContent = (ESTADO_LABELS[r.estado] || r.estado || '—');
+                    document.getElementById('dc-descripcion').textContent = r.descripcion || '—';
+                }
+            } catch (e) { /* noop */ }
+            try {
+                const resD = await fetch(`/api/reparaciones/${id}/diagnostico`);
+                const d = resD.ok ? await resD.json() : null;
+                if (d && d.hallazgos) {
+                    document.getElementById('dc-diagnostico').innerHTML =
+                        `<p style="margin:4px 0;"><strong>Hallazgos:</strong> ${escapeHtml(d.hallazgos)}</p>`
+                        + (d.recomendaciones ? `<p style="margin:4px 0;"><strong>Recomendaciones:</strong> ${escapeHtml(d.recomendaciones)}</p>` : '')
+                        + (d.repuestos ? `<p style="margin:4px 0;"><strong>Repuestos:</strong> ${escapeHtml(d.repuestos)}</p>` : '');
+                }
+            } catch (e) { /* noop */ }
+        }
+
+        // ====== Inicial ======
+        cargarTodo().then(() => {
+            const nuevaId = sessionStorage.getItem('nuevaReparacionId');
+            if (nuevaId) {
+                sessionStorage.removeItem('nuevaReparacionId');
+                setTimeout(() => resaltarFila(nuevaId), 300);
+            }
+        });
+    </script>
+</body>
+
+</html>

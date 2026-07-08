@@ -9,43 +9,50 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=arrow_back_ios_new" />
     <link rel="website icon" type="png"  href="Imagenes/Three reparations.png">
+    <link rel="icon" type="png" href="Imagenes/logo_three.png">
+
+
 </head>
 <body>
     <div class="container">
+
+        <!-- FORMULARIO LOGIN -->
         <div class="form-box login">
-            <form action="admin.html">
-                <img src="Imagenes/logo_three.png" id="logo-login"alt="Logo" name="Logo" width="150px">
+            <form id="formLogin">
+                <img src="Imagenes/logo_three.png" id="logo-login" alt="Logo" width="150px">
                 <h1 id="titulo-login">Iniciar Sesión</h1>
                 <div class="input-box">
-                    <input type="text" placeholder="Correo" required>
-                    <!-- <i class='bx bx-user'></i> -->
-                     <i class='bx bx-envelope'></i>
-                </div>
-                <div class="input-box">
-                    <input type="password" placeholder="Contraseña" required>
-                    <i class='bx bx-lock-alt'></i>
-                </div>
-                <button type="submit" class="btn">Ingresar</button>
-            </form>
-        </div>
-
-        <div class="form-box register">
-            <form action="#">
-                <img src="Imagenes/logo_three.png" id="logo-signup" alt="Logo" name="Logo" width="150px">
-                <h1>Registro</h1>
-                <div class="input-box">
-                    <input type="text" placeholder="Nombre" required>
-                    <i class='bx bx-user'></i>
-                </div>
-                <div class="input-box">
-                    <input type="email" placeholder="Correo" required>
+                    <input type="email" id="loginEmail" placeholder="Correo" required>
                     <i class='bx bx-envelope'></i>
                 </div>
                 <div class="input-box">
-                    <input type="password" placeholder="Contraseña" required>
+                    <input type="password" id="loginPassword" placeholder="Contraseña" required>
+                    <i class='bx bx-lock-alt'></i>
+                </div>
+                <button type="submit" class="btn">Ingresar</button>
+                <p id="mensajeLogin" class="mensaje"></p>
+            </form>
+        </div>
+
+        <!-- FORMULARIO REGISTRO -->
+        <div class="form-box register">
+            <form id="formRegistro">
+                <img src="Imagenes/logo_three.png" id="logo-signup" alt="Logo" width="150px">
+                <h1>Registro</h1>
+                <div class="input-box">
+                    <input type="text" id="regNombre" placeholder="Nombre" required>
+                    <i class='bx bx-user'></i>
+                </div>
+                <div class="input-box">
+                    <input type="email" id="regEmail" placeholder="Correo" required>
+                    <i class='bx bx-envelope'></i>
+                </div>
+                <div class="input-box">
+                    <input type="password" id="regPassword" placeholder="Contraseña" required>
                     <i class='bx bx-lock-alt'></i>
                 </div>
                 <button type="submit" class="btn">Registrarse</button>
+                <p id="mensajeRegistro" class="mensaje"></p>
             </form>
         </div>
 
@@ -62,7 +69,7 @@
             </div>
         </div>
     </div>
-    
+
     <script src="script.js"></script>
 </body>
 </html>
